@@ -1,0 +1,441 @@
+// Prisma schema for Firm business management platform
+// PostgreSQL database with multi-tenant isolation
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ──────────────────────────────────────────────
+// Enums
+// ──────────────────────────────────────────────
+
+enum FirmStatus {
+  ACTIVE
+  ARCHIVED
+  SUSPENDED
+}
+
+enum BranchStatus {
+  ACTIVE
+  INACTIVE
+  CLOSED
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+// ──────────────────────────────────────────────
+// Core Entities
+// ──────────────────────────────────────────────
+
+/// A business entity (tenant). All tenant-scoped data is isolated by firmId.
+model Firm {
+  id                String     @id @default(cuid())
+  name              String
+  logo              String?
+  businessType      String
+  gstNumber         String?
+  address           String?
+  phone             String?
+  currency          String     @default("INR")
+  timezone          String     @default("Asia/Kolkata")
+  status            FirmStatus @default(ACTIVE)
+  masterBusinessKey String?
+
+  // Audit fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
+  // Relations
+  branches        Branch[]
+  userAssignments UserFirm[]
+  roles           Role[]
+  activityLogs    ActivityLog[]
+  customers       Customer[]
+  suppliers       Supplier[]
+  sales           Sale[]
+  purchases       Purchase[]
+  expenses        Expense[]
+  inventoryItems  InventoryItem[]
+  deliveryChallans DeliveryChallan[]
+
+  @@map("firms")
+}
+
+/// A physical location/branch within a firm.
+model Branch {
+  id      String       @id @default(cuid())
+  name    String
+  code    String? // Short code, e.g., "PUN", "MUM", "NSK"
+  address String?
+  phone   String?
+  firmId  String
+  firm    Firm         @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  status  BranchStatus @default(ACTIVE)
+
+  // Audit fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
+  sales           Sale[]
+  purchases       Purchase[]
+  expenses        Expense[]
+  inventoryItems  InventoryItem[]
+  deliveryChallans DeliveryChallan[]
+
+  @@unique([firmId, code])
+  @@map("branches")
+}
+
+/// A platform user authenticated via Google OAuth.
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  name         String?
+  avatar       String?
+  isSuperAdmin Boolean    @default(false)
+  status       UserStatus @default(ACTIVE)
+  lastLoginAt  DateTime?
+
+  // Audit fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
+  // Relations
+  firmAssignments UserFirm[]
+  activityLogs    ActivityLog[]
+
+  @@map("users")
+}
+
+/// Maps a user to a firm with a specific role.
+model UserFirm {
+  id       String     @id @default(cuid())
+  userId   String
+  firmId   String
+  roleId   String
+  branchId String? // Optional default branch for this user
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firm Firm @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id])
+
+  status UserStatus @default(ACTIVE)
+
+  // Audit fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, firmId])
+  @@index([firmId])
+  @@map("user_firms")
+}
+
+// ──────────────────────────────────────────────
+// Authorization
+// ──────────────────────────────────────────────
+
+/// A named group of permissions. Can be system-wide or firm-specific.
+model Role {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  firmId      String? // null = system role, set = custom firm role
+  firm        Firm?   @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  isSystem    Boolean @default(false)
+
+  // Audit fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
+  // Relations
+  permissions RolePermission[]
+  userFirms   UserFirm[]
+
+  @@unique([name, firmId])
+  @@map("roles")
+}
+
+/// An individual permission code following Module.Action pattern.
+model Permission {
+  id          String  @id @default(cuid())
+  code        String  @unique // e.g., "Sales.View", "Inventory.Edit"
+  name        String // Human-readable name
+  description String?
+  module      String // e.g., "Sales", "Purchase", "Inventory"
+  action      String // e.g., "View", "Create", "Edit", "Delete", "Manage"
+
+  // Relations
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+/// Junction table: which permissions belong to which role.
+model RolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// ──────────────────────────────────────────────
+// Audit
+// ──────────────────────────────────────────────
+
+/// Records important user actions for audit trail.
+model ActivityLog {
+  id         String  @id @default(cuid())
+  action     String // e.g., "LOGIN", "USER_CREATED", "FIRM_CREATED", "PERMISSION_CHANGED"
+  details    Json?
+  entityType String? // e.g., "Firm", "User", "Role"
+  entityId   String?
+  userId     String?
+  firmId     String?
+  ipAddress  String?
+  userAgent  String?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  firm Firm? @relation(fields: [firmId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([firmId])
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+// ──────────────────────────────────────────────
+// Operational Entities
+// ──────────────────────────────────────────────
+
+model Customer {
+  id      String  @id @default(cuid())
+  name    String
+  email   String?
+  phone   String?
+  address String?
+  firmId  String
+  firm    Firm    @relation(fields: [firmId], references: [id], onDelete: Cascade)
+
+  sales            Sale[]
+  deliveryChallans DeliveryChallan[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
+  @@index([firmId, name])
+  @@map("customers")
+}
+
+model Supplier {
+  id      String  @id @default(cuid())
+  name    String
+  email   String?
+  phone   String?
+  address String?
+  firmId  String
+  firm    Firm    @relation(fields: [firmId], references: [id], onDelete: Cascade)
+
+  purchases Purchase[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
+  @@index([firmId, name])
+  @@map("suppliers")
+}
+
+model Sale {
+  id            String    @id @default(cuid())
+  invoiceNumber String?
+  customerName  String?
+  customerId    String?
+  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  firmId        String
+  firm          Firm      @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  branchId      String?
+  branch        Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  date        DateTime   @default(now())
+  subtotal    Float      @default(0)
+  tax         Float      @default(0)
+  discount    Float      @default(0)
+  total       Float      @default(0)
+  status      String     @default("CONFIRMED")
+  saleType    String     @default("PAKU")
+  description String?
+  items       SaleItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
+  @@index([firmId, date(sort: Desc)])
+  @@index([firmId, status])
+  @@index([firmId, saleType])
+  @@index([firmId, branchId])
+  @@map("sales")
+}
+
+model SaleItem {
+  id        String  @id @default(cuid())
+  saleId    String
+  sale      Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  name      String
+  category  String?
+  size      String?
+  quantity  Int     @default(1)
+  unit      String  @default("pcs")
+  unitPrice Float   @default(0)
+  total     Float   @default(0)
+
+  @@index([saleId])
+  @@map("sale_items")
+}
+
+model Purchase {
+  id            String    @id @default(cuid())
+  invoiceNumber String?
+  supplierName  String?
+  supplierId    String?
+  supplier      Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  firmId        String
+  firm          Firm      @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  branchId      String?
+  branch        Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  date     DateTime       @default(now())
+  subtotal Float          @default(0)
+  tax      Float          @default(0)
+  discount Float          @default(0)
+  total    Float          @default(0)
+  status   String         @default("RECEIVED")
+  items    PurchaseItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
+  @@index([firmId, date(sort: Desc)])
+  @@index([firmId, status])
+  @@map("purchases")
+}
+
+model PurchaseItem {
+  id         String   @id @default(cuid())
+  purchaseId String
+  purchase   Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  name       String
+  category   String?
+  size       String?
+  quantity   Int      @default(1)
+  unit       String   @default("pcs")
+  unitPrice  Float    @default(0)
+  total      Float    @default(0)
+
+  @@index([purchaseId])
+  @@map("purchase_items")
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  firmId      String
+  firm        Firm     @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  branchId    String?
+  branch      Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  category    String
+  expenseType String   @default("PAKU")
+  description String?
+  amount      Float
+  date        DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
+  @@index([firmId, date(sort: Desc)])
+  @@index([firmId, category])
+  @@index([firmId, expenseType])
+  @@map("expenses")
+}
+
+model InventoryItem {
+  id            String  @id @default(cuid())
+  firmId        String
+  firm          Firm    @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  branchId      String?
+  branch        Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  name          String
+  sku           String?
+  category      String?
+  unit          String  @default("PCS")
+  sellingPrice  Float
+  purchasePrice Float   @default(0)
+  quantity      Int     @default(0)
+  minStock      Int     @default(5)
+  sizes         Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
+  @@index([firmId, name])
+  @@index([firmId, sku])
+  @@index([firmId, category])
+  @@map("inventory_items")
+}
+
+model DeliveryChallan {
+  id            String    @id @default(cuid())
+  firmId        String
+  firm          Firm      @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  branchId      String?
+  branch        Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  customerId    String?
+  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName  String?
+  challanNumber String?
+  status        String    @default("DELIVERED")
+  date          DateTime  @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
+  @@index([firmId, date(sort: Desc)])
+  @@index([firmId, status])
+  @@map("delivery_challans")
+}

@@ -1,0 +1,16 @@
+{
+  "appId": "com.bcalc.app",
+  "appName": "Calculator",
+  "webDir": "out",
+  "server": {
+    "androidScheme": "http"
+  },
+  "android": {
+    "adjustMarginsForEdgeToEdge": "auto"
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css"
+    }
+  }
+}

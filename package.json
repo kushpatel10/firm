@@ -1,0 +1,26 @@
+{
+  "name": "firm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Firm — Multi-Tenant Business Management Platform",
+  "scripts": {
+    "dev": "concurrently -n \"backend,frontend\" -c \"blue,green\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build": "cd frontend && npm run build",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:studio": "cd backend && npm run prisma:studio",
+    "db:generate": "cd database && npm run db:generate",
+    "db:migrate": "cd database && npm run db:migrate",
+    "db:seed": "cd database && npm run db:seed",
+    "db:push": "cd database && npm run db:push",
+    "db:reset": "cd database && npm run db:reset",
+    "tunnel": "npx -y cloudflared tunnel --url http://localhost:3000",
+    "dev:tunnel": "concurrently -n \"backend,frontend,tunnel\" -c \"blue,green,magenta\" \"npm run dev:backend\" \"npm run dev:frontend\" \"npx -y cloudflared tunnel --url http://localhost:3000\"",
+    "cap:build": "cd frontend && npm run cap:build",
+    "cap:open": "cd frontend && npm run cap:open",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install && cd ../database && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
