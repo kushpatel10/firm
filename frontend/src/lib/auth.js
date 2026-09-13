@@ -15,13 +15,13 @@ export function getGoogleOAuthURL() {
   let redirectUri = GOOGLE_REDIRECT_URI;
   if (typeof window !== "undefined") {
     const origin = window.location.origin;
-    // If accessed through HTTPS domain or tunnel, route to same-origin /callback
+    // If accessed through HTTPS domain, Cloudflare tunnel, or reverse proxy, route to same-origin /callback
     if (
       origin &&
       !origin.includes("capacitor:") &&
       !origin.includes("localhost") &&
       !origin.includes("127.0.0.1") &&
-      window.location.protocol === "https:"
+      (window.location.protocol === "https:" || origin.includes("cloudflare") || origin.includes("trycloudflare.com"))
     ) {
       redirectUri = `${origin}/callback`;
     }

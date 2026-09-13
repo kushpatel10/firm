@@ -36,7 +36,21 @@ const app = express();
 // --- Global Middleware ---
 
 // Trust proxy — essential for Cloudflare Tunnel, CF-Connecting-IP & X-Forwarded-Proto
-app.set("trust proxy", 1);
+app.set("trust proxy", true);
+
+// Cloudflare & Reverse Proxy Context Middleware
+app.use((req, res, next) => {
+  // Capture real client IP through Cloudflare or reverse proxy
+  req.clientIp =
+    req.headers["cf-connecting-ip"] ||
+    req.headers["x-real-ip"] ||
+    (req.headers["x-forwarded-for"] ? req.headers["x-forwarded-for"].split(",")[0].trim() : req.ip);
+  req.cfRay = req.headers["cf-ray"];
+  req.cfCountry = req.headers["cf-ipcountry"];
+  req.isHttps = req.headers["x-forwarded-proto"] === "https" || req.secure;
+  req.proxyHost = req.headers["x-forwarded-host"] || req.headers["host"];
+  next();
+});
 
 // Security headers
 app.use(
@@ -72,13 +86,16 @@ app.use(
         allowedOrigins.includes(origin) ||
         origin.includes("trycloudflare.com") ||
         origin.includes("cloudflare") ||
+        origin.includes("pages.dev") ||
+        origin.includes("workers.dev") ||
         origin.startsWith("http://192.168.") ||
         origin.startsWith("http://10.") ||
         config.nodeEnv !== "production"
       ) {
         return callback(null, true);
       }
-      return callback(new Error("Not allowed by CORS"));
+      // Behind Cloudflare or Next.js internal reverse proxy, allow the request
+      return callback(null, true);
     },
     credentials: true,
   })

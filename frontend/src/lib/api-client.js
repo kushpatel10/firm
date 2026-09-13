@@ -190,28 +190,15 @@ export function getApiBaseUrl() {
     const protocol = window.location.protocol;
     let envUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
-    // Native Capacitor platform — default localhost points to Android emulator host (10.0.2.2)
+    // Native Capacitor mobile platform — default localhost points to Android emulator host (10.0.2.2)
     if (isCapacitor) {
       return envUrl.replace("localhost", "10.0.2.2").replace("127.0.0.1", "10.0.2.2");
     }
 
-    // Cloudflare Tunnel or any HTTPS remote domain — route through same-origin reverse proxy
-    if (
-      protocol === "https:" ||
-      hostname.includes("trycloudflare.com") ||
-      hostname.includes("cloudflare") ||
-      hostname.includes("pages.dev") ||
-      hostname.includes("vercel.app")
-    ) {
-      return `${window.location.origin}/api`;
-    }
-
-    // Local Area Network Wi-Fi (e.g. 192.168.x.x or 10.x.x.x)
-    if (hostname && hostname !== "localhost" && hostname !== "127.0.0.1") {
-      return `http://${hostname}:4000/api`;
-    }
-
-    return envUrl;
+    // In all web browsers (Cloudflare Tunnel, custom domain, VPS IP, or localhost),
+    // always route through same-origin `/api` which Next.js reverse-proxies to Express.
+    // This eliminates CORS issues and means only 1 public port (3000) needs to be exposed/tunneled.
+    return `${window.location.origin}/api`;
   }
 
   return process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";

@@ -21,11 +21,12 @@ const authService = {
    * @param {string} code - Google auth code
    * @returns {Promise<Object>} - { token, user, firm, role, permissions }
    */
-  async handleGoogleCallback(code) {
+  async handleGoogleCallback(code, redirectUri = null) {
+    const resolvedRedirectUri = redirectUri || config.googleRedirectUri;
     // Exchange code for tokens
     const { tokens } = await googleClient.getToken({
       code,
-      redirect_uri: config.googleRedirectUri,
+      redirect_uri: resolvedRedirectUri,
     });
 
     // Verify the ID token

@@ -17,8 +17,9 @@
     "db:seed": "cd database && npm run db:seed",
     "db:push": "cd database && npm run db:push",
     "db:reset": "cd database && npm run db:reset",
-    "tunnel": "npx -y cloudflared tunnel --url http://localhost:3000",
-    "dev:tunnel": "concurrently -n \"backend,frontend,tunnel\" -c \"blue,green,magenta\" \"npm run dev:backend\" \"npm run dev:frontend\" \"npx -y cloudflared tunnel --url http://localhost:3000\"",
+    "tunnel": "node scripts/cloudflare-tunnel.js",
+    "dev:tunnel": "concurrently -n \"backend,frontend,tunnel\" -c \"blue,green,magenta\" \"npm run dev:backend\" \"npm run dev:frontend\" \"node scripts/cloudflare-tunnel.js\"",
+    "start:tunnel": "concurrently -n \"backend,frontend,tunnel\" -c \"blue,green,magenta\" \"npm run start:backend\" \"npm run start:frontend\" \"node scripts/cloudflare-tunnel.js\"",
     "cap:build": "cd frontend && npm run cap:build",
     "cap:open": "cd frontend && npm run cap:open",
     "install:all": "cd backend && npm install && cd ../frontend && npm install && cd ../database && npm install"

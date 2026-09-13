@@ -19,10 +19,10 @@ router.get("/google", (req, res) => {
 // POST /api/auth/callback — Handle Google OAuth callback
 router.post("/callback", async (req, res, next) => {
   try {
-    const { code } = req.body;
+    const { code, redirectUri } = req.body;
     if (!code) return error(res, "Authorization code is required", 400);
 
-    const result = await authService.handleGoogleCallback(code);
+    const result = await authService.handleGoogleCallback(code, redirectUri);
 
     // Set token as httpOnly cookie as well
     res.cookie("token", result.token, {

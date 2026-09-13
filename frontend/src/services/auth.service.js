@@ -25,7 +25,8 @@ export const authService = {
     if (isDevAuthBypass()) {
       return { success: true, data: this.getDevSession() };
     }
-    const res = await apiClient.post("/auth/callback", { code });
+    const redirectUri = typeof window !== "undefined" ? `${window.location.origin}/callback` : undefined;
+    const res = await apiClient.post("/auth/callback", { code, redirectUri });
     if (res?.data?.token) {
       storeToken(res.data.token);
     }
