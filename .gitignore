@@ -3,11 +3,7 @@ node_modules/
 /.pnp
 .pnp.*
 
-# Environment variables & secrets (keep .example files)
-.env
-.env.*
-!.env.example
-!.env.*.example
+# Secrets
 *.pem
 
 # Production builds
