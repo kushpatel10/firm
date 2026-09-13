@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack",
+    "dev": "next dev -H 0.0.0.0 --webpack",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -H 0.0.0.0",
     "cap:build": "next build --webpack && npx cap sync android",
     "cap:open": "npx cap open android",
     "cap:run": "npx cap run android --target emulator-5554"

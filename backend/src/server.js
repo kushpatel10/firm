@@ -158,11 +158,11 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 // --- Start Server ---
-app.listen(config.port, () => {
-  console.log(`\n🚀 Firm API running on http://localhost:${config.port}`);
+app.listen(config.port, "0.0.0.0", () => {
+  console.log(`\n🚀 Firm API running on http://0.0.0.0:${config.port}`);
   console.log(`   Environment: ${config.nodeEnv}`);
   console.log(`   Frontend: ${config.frontendUrl}`);
-  console.log(`   Health: http://localhost:${config.port}/api/health\n`);
+  console.log(`   Health: http://0.0.0.0:${config.port}/api/health\n`);
 });
 
 module.exports = app;
