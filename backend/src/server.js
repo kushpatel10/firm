@@ -183,7 +183,7 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 // --- Start Server ---
-app.listen(config.port, "0.0.0.0", () => {
+const server = app.listen(config.port, "0.0.0.0", () => {
   console.log(`\n🚀 Firm API running on http://0.0.0.0:${config.port}`);
   console.log(`   Environment: ${config.nodeEnv}`);
   console.log(`   Frontend: ${config.frontendUrl}`);
@@ -191,6 +191,15 @@ app.listen(config.port, "0.0.0.0", () => {
     console.log(`   Public URL: ${config.publicUrl}`);
   }
   console.log(`   Health: http://0.0.0.0:${config.port}/api/health\n`);
+});
+
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(`\n❌ Error: Port ${config.port} is already in use by another process! Run: sudo fuser -k ${config.port}/tcp\n`);
+    process.exit(1);
+  } else {
+    console.error(`\n❌ Server error:`, err);
+  }
 });
 
 module.exports = app;
