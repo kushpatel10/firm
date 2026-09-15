@@ -12,7 +12,8 @@ const router = Router();
 
 // GET /api/auth/google — Get Google OAuth consent URL
 router.get("/google", (req, res) => {
-  const url = authService.getGoogleAuthUrl();
+  const redirectUri = req.query.redirectUri || null;
+  const url = authService.getGoogleAuthUrl(redirectUri);
   success(res, { url });
 });
 
@@ -24,10 +25,17 @@ router.post("/callback", async (req, res, next) => {
 
     const result = await authService.handleGoogleCallback(code, redirectUri);
 
+    const isHttps =
+      req.headers["x-forwarded-proto"] === "https" ||
+      req.secure ||
+      (req.headers["host"] && req.headers["host"].includes(".ts.net")) ||
+      (config.publicUrl && config.publicUrl.startsWith("https://")) ||
+      config.nodeEnv === "production";
+
     // Set token as httpOnly cookie as well
     res.cookie("token", result.token, {
       httpOnly: true,
-      secure: config.nodeEnv === "production",
+      secure: isHttps,
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });

@@ -38,17 +38,23 @@ const app = express();
 // Trust proxy — essential for Cloudflare Tunnel, CF-Connecting-IP & X-Forwarded-Proto
 app.set("trust proxy", true);
 
-// Cloudflare & Reverse Proxy Context Middleware
+// Reverse Proxy & Tunnel Context Middleware (Tailscale Funnel, Cloudflare, Nginx)
 app.use((req, res, next) => {
-  // Capture real client IP through Cloudflare or reverse proxy
+  // Capture real client IP through reverse proxy
   req.clientIp =
     req.headers["cf-connecting-ip"] ||
     req.headers["x-real-ip"] ||
     (req.headers["x-forwarded-for"] ? req.headers["x-forwarded-for"].split(",")[0].trim() : req.ip);
   req.cfRay = req.headers["cf-ray"];
   req.cfCountry = req.headers["cf-ipcountry"];
-  req.isHttps = req.headers["x-forwarded-proto"] === "https" || req.secure;
-  req.proxyHost = req.headers["x-forwarded-host"] || req.headers["host"];
+  const forwardedProto = req.headers["x-forwarded-proto"];
+  const hostHeader = req.headers["x-forwarded-host"] || req.headers["host"] || "";
+  req.isHttps =
+    forwardedProto === "https" ||
+    req.secure ||
+    hostHeader.includes(".ts.net") ||
+    (config.publicUrl && config.publicUrl.startsWith("https://"));
+  req.proxyHost = hostHeader;
   next();
 });
 
@@ -62,9 +68,10 @@ app.use(
 // Fast HTTP response compression (gzip/deflate)
 app.use(compression());
 
-// CORS — allow frontend, mobile Capacitor, local IPs, and Cloudflare Tunnel origins
+// CORS — allow frontend, mobile Capacitor, local IPs, Tailscale Funnel, and Cloudflare origins
 const allowedOrigins = [
   config.frontendUrl,
+  config.publicUrl,
   "http://localhost:3000",
   "http://localhost:4000",
   "https://localhost",
@@ -73,7 +80,7 @@ const allowedOrigins = [
   "https://com.firm.app",
   "https://com.bcalc.app",
   "capacitor://com.bcalc.app",
-];
+].filter(Boolean);
 
 app.use(
   cors({
@@ -81,9 +88,10 @@ app.use(
       // Allow requests with no origin (native mobile apps, curl, server-to-server)
       if (!origin) return callback(null, true);
 
-      // Match allowed list, LAN IPs, or Cloudflare Tunnel origins
+      // Match allowed list, LAN IPs, Tailscale Funnel (.ts.net), or Cloudflare origins
       if (
         allowedOrigins.includes(origin) ||
+        origin.includes(".ts.net") ||
         origin.includes("trycloudflare.com") ||
         origin.includes("cloudflare") ||
         origin.includes("pages.dev") ||
@@ -94,7 +102,7 @@ app.use(
       ) {
         return callback(null, true);
       }
-      // Behind Cloudflare or Next.js internal reverse proxy, allow the request
+      // Behind reverse proxy or Next.js internal rewrite proxy, allow the request
       return callback(null, true);
     },
     credentials: true,
@@ -179,6 +187,9 @@ app.listen(config.port, "0.0.0.0", () => {
   console.log(`\n🚀 Firm API running on http://0.0.0.0:${config.port}`);
   console.log(`   Environment: ${config.nodeEnv}`);
   console.log(`   Frontend: ${config.frontendUrl}`);
+  if (config.publicUrl && config.publicUrl !== config.frontendUrl) {
+    console.log(`   Public URL: ${config.publicUrl}`);
+  }
   console.log(`   Health: http://0.0.0.0:${config.port}/api/health\n`);
 });
 

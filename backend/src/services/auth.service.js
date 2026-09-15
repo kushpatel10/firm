@@ -241,13 +241,14 @@ const authService = {
 
   /**
    * Get the Google OAuth consent URL.
+   * @param {string|null} redirectUri - Optional redirect URI override
    * @returns {string}
    */
-  getGoogleAuthUrl() {
+  getGoogleAuthUrl(redirectUri = null) {
     return googleClient.generateAuthUrl({
       access_type: "offline",
       scope: ["openid", "email", "profile"],
-      redirect_uri: config.googleRedirectUri,
+      redirect_uri: redirectUri || config.googleRedirectUri,
     });
   },
 

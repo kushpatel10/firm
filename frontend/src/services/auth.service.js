@@ -5,7 +5,7 @@
  */
 
 import { apiClient, storeToken, clearToken, parseJWT } from "@/lib/api-client";
-import { getGoogleOAuthURL, isDevAuthBypass } from "@/lib/auth";
+import { getGoogleOAuthURL, getGoogleRedirectURI, isDevAuthBypass } from "@/lib/auth";
 
 export const authService = {
   /**
@@ -25,7 +25,7 @@ export const authService = {
     if (isDevAuthBypass()) {
       return { success: true, data: this.getDevSession() };
     }
-    const redirectUri = typeof window !== "undefined" ? `${window.location.origin}/callback` : undefined;
+    const redirectUri = getGoogleRedirectURI();
     const res = await apiClient.post("/auth/callback", { code, redirectUri });
     if (res?.data?.token) {
       storeToken(res.data.token);

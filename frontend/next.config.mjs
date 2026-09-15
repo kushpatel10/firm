@@ -11,6 +11,12 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+  env: {
+    NEXT_PUBLIC_PUBLIC_URL:
+      process.env.NEXT_PUBLIC_PUBLIC_URL ||
+      process.env.PUBLIC_URL ||
+      "",
+  },
 };
 
 // Only enable static HTML export when building specifically for Capacitor mobile app package
@@ -21,6 +27,7 @@ const isExportBuild =
 if (isExportBuild) {
   nextConfig.output = "export";
   nextConfig.env = {
+    ...nextConfig.env,
     NEXT_PUBLIC_IS_CAPACITOR_BUILD: "true",
   };
 } else {
