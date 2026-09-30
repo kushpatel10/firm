@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { Loader2 } from "lucide-react";
@@ -10,21 +10,30 @@ function CallbackContent() {
   const searchParams = useSearchParams();
   const { handleCallback } = useAuth();
   const [returnToken, setReturnToken] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const processedRef = useRef(false);
 
   useEffect(() => {
     async function processCallback() {
       const code = searchParams.get("code");
       if (!code) {
-        router.push("/login");
+        router.replace("/login");
         return;
       }
+
+      if (processedRef.current) return;
+      processedRef.current = true;
 
       try {
         const session = await handleCallback(code);
         const token = session?.token || localStorage.getItem("firm_auth_token") || "dev-token";
         setReturnToken(token);
 
-        // Deep link back into native Android/iOS app if on a mobile device or in Capacitor
+        const targetRoute = session?.user?.isSuperAdmin
+          ? "/admin"
+          : "/dashboard";
+
+        // Deep link back into native Android/iOS app ONLY if inside native Capacitor shell
         if (typeof window !== "undefined") {
           let isNative = false;
           try {
@@ -32,24 +41,18 @@ function CallbackContent() {
             isNative = typeof Capacitor?.isNativePlatform === "function" && Capacitor.isNativePlatform();
           } catch {}
 
-          const isMobileDevice = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
-
-          if (isNative || window.location.protocol === "capacitor:" || isMobileDevice) {
+          const isCapacitorShell = isNative || window.location.protocol === "capacitor:";
+          if (isCapacitorShell) {
             window.location.href = `com.bcalc.app://callback?token=${encodeURIComponent(token)}`;
             return;
           }
         }
 
-        if (session?.user?.isSuperAdmin) {
-          router.push("/admin");
-        } else if (session?.firm?.id) {
-          router.push(`/firm/${session.firm.id}`);
-        } else {
-          router.push("/admin");
-        }
+        router.replace(targetRoute);
       } catch (err) {
         console.error("Authentication callback error:", err);
-        router.push("/access-denied");
+        setErrorMessage(err?.message || "Authentication failed");
+        router.replace("/access-denied");
       }
     }
 

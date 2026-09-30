@@ -106,7 +106,15 @@ export const authService = {
         storeToken(res.data.token);
       }
       return res?.data || this.getDevSession();
-    } catch {
+    } catch (err) {
+      if (
+        err?.message?.includes("not available in production") ||
+        err?.message?.includes("404")
+      ) {
+        throw new Error(
+          "Developer Session Bypass is disabled on production servers. Please sign in using 'Continue with Google'."
+        );
+      }
       const fallback = this.getDevSession();
       storeToken(fallback.token);
       return fallback;

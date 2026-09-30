@@ -115,7 +115,7 @@ export function DataTable({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border bg-card overflow-x-auto touch-scroll shadow-2xs">
+      <div className="rounded-2xl border border-border/80 bg-card overflow-x-auto touch-scroll shadow-xs">
         <Table>
           <TableHeader>
             <TableRow>
@@ -123,7 +123,7 @@ export function DataTable({
                 <TableHead key={col.key} className={col.className}>
                   {col.sortable ? (
                     <button
-                      className="flex items-center gap-1 hover:text-foreground transition-colors cursor-pointer py-1"
+                      className="flex items-center gap-1.5 hover:text-foreground transition-colors cursor-pointer py-1"
                       onClick={() => handleSort(col.key)}
                     >
                       {col.label}
@@ -140,7 +140,7 @@ export function DataTable({
             {paginatedData.map((row, rowIdx) => (
               <TableRow
                 key={row.id || rowIdx}
-                className={onRowClick ? "cursor-pointer hover:bg-muted/50" : ""}
+                className={onRowClick ? "cursor-pointer hover:bg-secondary/40" : ""}
                 onClick={() => onRowClick?.(row)}
               >
                 {columns.map((col) => (
@@ -156,24 +156,24 @@ export function DataTable({
 
       {/* Pagination — Mobile Optimized */}
       {totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-2">
-          <p className="text-xs sm:text-sm text-muted-foreground order-2 sm:order-1">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1 py-1">
+          <p className="text-xs sm:text-sm text-muted-foreground order-2 sm:order-1 font-medium">
             Showing {startIdx}–{endIdx} of {safeData.length}
           </p>
-          <div className="flex items-center gap-1 order-1 sm:order-2">
-            <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setCurrentPage(1)} disabled={safeCurrentPage === 1}>
+          <div className="flex items-center gap-1.5 order-1 sm:order-2">
+            <Button variant="outline" size="icon" className="h-9.5 w-9.5 rounded-xl active:scale-95" onClick={() => setCurrentPage(1)} disabled={safeCurrentPage === 1}>
               <ChevronsLeft className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setCurrentPage(safeCurrentPage - 1)} disabled={safeCurrentPage === 1}>
+            <Button variant="outline" size="icon" className="h-9.5 w-9.5 rounded-xl active:scale-95" onClick={() => setCurrentPage(safeCurrentPage - 1)} disabled={safeCurrentPage === 1}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-xs sm:text-sm px-2 text-muted-foreground font-medium">
+            <span className="text-xs sm:text-sm px-2 text-muted-foreground font-semibold tabular-nums">
               {safeCurrentPage} / {totalPages}
             </span>
-            <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setCurrentPage(safeCurrentPage + 1)} disabled={safeCurrentPage === totalPages}>
+            <Button variant="outline" size="icon" className="h-9.5 w-9.5 rounded-xl active:scale-95" onClick={() => setCurrentPage(safeCurrentPage + 1)} disabled={safeCurrentPage === totalPages}>
               <ChevronRight className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setCurrentPage(totalPages)} disabled={safeCurrentPage === totalPages}>
+            <Button variant="outline" size="icon" className="h-9.5 w-9.5 rounded-xl active:scale-95" onClick={() => setCurrentPage(totalPages)} disabled={safeCurrentPage === totalPages}>
               <ChevronsRight className="h-4 w-4" />
             </Button>
           </div>

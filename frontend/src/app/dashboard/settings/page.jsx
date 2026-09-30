@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/shared/page-header";
 import { PermissionGate } from "@/components/shared/permission-gate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,7 +24,8 @@ import { Loader2, Plus, Building } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SettingsPage() {
-  const { firmId } = useParams();
+  const { firm, loading: authLoading } = useAuth();
+  const firmId = firm?.id;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -71,8 +72,12 @@ export default function SettingsPage() {
   }, [firmId]);
 
   useEffect(() => {
-    loadSettingsData();
-  }, [loadSettingsData]);
+    if (!authLoading && firmId) {
+      loadSettingsData();
+    } else if (!authLoading && !firmId) {
+      setLoading(false);
+    }
+  }, [authLoading, firmId, loadSettingsData]);
 
   const handleProfileSave = async (e) => {
     e.preventDefault();
@@ -135,7 +140,7 @@ export default function SettingsPage() {
       <PageHeader
         title="Settings"
         description="Manage firm settings and preferences"
-        breadcrumbs={[{ label: "Firm", href: `/firm/${firmId}` }, { label: "Settings" }]}
+        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Settings" }]}
       />
 
       <Tabs defaultValue="general">

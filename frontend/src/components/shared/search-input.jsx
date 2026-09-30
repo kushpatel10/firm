@@ -27,12 +27,12 @@ export function SearchInput({ placeholder = "Search…", onSearch, className }) 
 
   return (
     <div className={`relative ${className || ""}`}>
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
       <Input
         placeholder={placeholder}
         value={value}
         onChange={handleChange}
-        className="pl-9"
+        className="pl-10 h-10 rounded-xl bg-card border-border/80 text-sm focus-visible:border-border"
       />
     </div>
   );

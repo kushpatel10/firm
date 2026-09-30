@@ -39,11 +39,11 @@ export function PageHeader({ title, description, breadcrumbs = [], actions }) {
           </BreadcrumbList>
         </Breadcrumb>
       )}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between border-b border-border/70 pb-4 sm:pb-5">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">{title}</h1>
           {description && (
-            <p className="text-muted-foreground mt-1">{description}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">{description}</p>
           )}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">{actions}</div>}

@@ -240,9 +240,12 @@ async function request(endpoint, options = {}) {
     if (typeof window !== "undefined") {
       localStorage.setItem("firm_user_logged_out", "true");
       sessionStorage.setItem("firm_user_logged_out", "true");
+      const currentPath = window.location.pathname;
       if (
-        !window.location.pathname.startsWith("/login") &&
-        !window.location.pathname.startsWith("/callback")
+        !endpoint.startsWith("/auth/") &&
+        !currentPath.startsWith("/login") &&
+        !currentPath.startsWith("/callback") &&
+        !currentPath.startsWith("/access-denied")
       ) {
         window.location.replace("/login");
       }

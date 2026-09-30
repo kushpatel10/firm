@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { Building2, Shield, ArrowRight, Server, Lock, Settings, Calculator as CalculatorIcon } from "lucide-react";
 import { CalculatorVault } from "@/components/decoy/calculator-vault";
 import { ServerConfigModal } from "@/components/decoy/server-config-modal";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const { login, devLogin, isAuthenticated, user, firm, loading } = useAuth();
@@ -40,9 +41,9 @@ export default function LoginPage() {
 
     if (!loading && isAuthenticated && user && !isLoggedOut) {
       if (user.isSuperAdmin) {
-        router.push("/admin");
+        router.replace("/admin");
       } else {
-        router.push(firm?.id ? `/firm/${firm.id}` : "/firm/dev-firm-001");
+        router.replace("/dashboard");
       }
     }
   }, [loading, isAuthenticated, user, firm, router]);
@@ -63,14 +64,19 @@ export default function LoginPage() {
   const handleDevLogin = async () => {
     setDevLoading(true);
     try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("firm_user_logged_out");
+        sessionStorage.removeItem("firm_user_logged_out");
+      }
       const session = await devLogin();
       if (session?.user?.isSuperAdmin) {
-        router.push("/admin");
+        router.replace("/admin");
       } else {
-        router.push(session?.firm?.id ? `/firm/${session.firm.id}` : "/firm/dev-firm-001");
+        router.replace("/dashboard");
       }
     } catch (err) {
       console.error("Dev login error:", err);
+      toast.error(err?.message || "Developer login failed");
     } finally {
       setDevLoading(false);
     }
@@ -78,9 +84,14 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("firm_user_logged_out");
+        sessionStorage.removeItem("firm_user_logged_out");
+      }
       await login();
     } catch (err) {
       console.error("Login error:", err);
+      toast.error(err?.message || "Google sign-in initialization failed");
     }
   };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { SearchInput } from "@/components/shared/search-input";
@@ -30,7 +30,8 @@ const TAX_RATE_PRESETS = [
 ];
 
 export default function PurchasesPage() {
-  const { firmId } = useParams();
+  const { firm, loading: authLoading } = useAuth();
+  const firmId = firm?.id;
   const [purchases, setPurchases] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -81,13 +82,15 @@ export default function PurchasesPage() {
   }, [firmId]);
 
   useEffect(() => {
-    if (firmId) {
+    if (!authLoading && firmId) {
       loadPurchases();
       supplierService.getAll(firmId).then((res) => {
         setSuppliers(res?.suppliers || res || []);
       }).catch(() => {});
+    } else if (!authLoading && !firmId) {
+      setLoading(false);
     }
-  }, [firmId, loadPurchases]);
+  }, [authLoading, firmId, loadPurchases]);
 
   // Tax calculation helper for Create Form
   const calcTaxAmount = (subVal, rateType, customVal) => {
@@ -346,7 +349,7 @@ export default function PurchasesPage() {
       <PageHeader
         title="Purchases"
         description="Track supplier orders, purchase invoices, and input tax / GST breakdown"
-        breadcrumbs={[{ label: "Firm", href: `/firm/${firmId}` }, { label: "Purchases" }]}
+        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Purchases" }]}
         actions={
           <PermissionGate permission="Purchase.Create">
             <Button className="gap-2" onClick={() => setCreateDialogOpen(true)}>

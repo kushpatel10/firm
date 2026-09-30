@@ -18,13 +18,13 @@ export function AuthGuard({ children, requireSuperAdmin = false }) {
           sessionStorage.getItem("firm_user_logged_out") === "true");
 
       if (!isAuthenticated || isLoggedOut) {
-        if (typeof window !== "undefined") {
-          window.location.replace("/login");
-        } else {
+        if (pathname !== "/login") {
           router.replace("/login");
         }
       } else if (requireSuperAdmin && !user?.isSuperAdmin) {
-        router.replace("/access-denied");
+        if (pathname !== "/access-denied") {
+          router.replace("/access-denied");
+        }
       }
     }
   }, [isAuthenticated, user, loading, requireSuperAdmin, router, pathname]);

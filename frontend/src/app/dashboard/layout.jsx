@@ -3,22 +3,11 @@ import { FirmTopbar } from "@/features/firm/components/firm-topbar";
 import { AuthGuard } from "@/components/shared/auth-guard";
 import { SidebarProvider } from "@/contexts/sidebar-context";
 
-export function generateStaticParams() {
-  return [
-    { firmId: "demo" },
-    { firmId: "dev-firm-001" },
-    { firmId: "default" },
-    { firmId: "cmseljlzg0003kt5kowwod3kv" },
-  ];
-}
-
-export const dynamicParams = false;
-
 export const metadata = {
   title: "Dashboard — Firm",
 };
 
-export default function FirmLayout({ children }) {
+export default function DashboardLayout({ children }) {
   return (
     <AuthGuard>
       <SidebarProvider>

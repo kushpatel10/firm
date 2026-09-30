@@ -35,28 +35,28 @@ export function FirmTopbar() {
   const [notifOpen, setNotifOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 flex flex-col border-b border-sidebar-border bg-sidebar/95 backdrop-blur-md pt-safe">
-      <div className="flex h-11 sm:h-13 items-center justify-between px-3 sm:px-4 lg:px-6">
+    <header className="sticky top-0 z-40 flex flex-col border-b border-border/70 bg-sidebar/95 backdrop-blur-md pt-safe">
+      <div className="flex h-13 sm:h-14 items-center justify-between px-3 sm:px-4 lg:px-6">
         {/* Left side — Mobile Menu Toggle */}
         <div className="flex items-center gap-2.5">
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleMobile}
-            className="lg:hidden h-8 w-8 text-foreground hover:bg-secondary rounded-full"
+            className="lg:hidden h-10 w-10 text-foreground hover:bg-secondary rounded-xl active:scale-95 transition-all"
             aria-label="Toggle navigation menu"
           >
-            <Menu className="h-4 w-4" />
+            <Menu className="h-5 w-5" />
           </Button>
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 sm:gap-2">
 
           {/* Notifications */}
           <Sheet open={notifOpen} onOpenChange={setNotifOpen}>
-            <SheetTrigger className="relative h-8 w-8 flex items-center justify-center rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-all outline-none cursor-pointer">
-              <Bell className="h-4 w-4" />
+            <SheetTrigger className="relative h-9 w-9 flex items-center justify-center rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground transition-all outline-none cursor-pointer active:scale-95">
+              <Bell className="h-4.5 w-4.5" />
             </SheetTrigger>
             <SheetContent className="bg-card border-border/80">
               <SheetHeader>
@@ -71,9 +71,9 @@ export function FirmTopbar() {
 
           {/* Admin link */}
           {user?.isSuperAdmin && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-full hover:bg-secondary" asChild>
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground rounded-xl hover:bg-secondary active:scale-95" asChild>
               <Link href="/admin">
-                <Shield className="h-4 w-4" />
+                <Shield className="h-4.5 w-4.5" />
               </Link>
             </Button>
           )}
@@ -83,12 +83,12 @@ export function FirmTopbar() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-amber-500 rounded-full hover:bg-secondary cursor-pointer"
+              className="h-9 w-9 text-muted-foreground hover:text-amber-500 rounded-xl hover:bg-secondary cursor-pointer active:scale-95"
               title="Lock to Calculator Decoy"
               aria-label="Lock to Calculator"
               onClick={lock}
             >
-              <Lock className="h-4 w-4" />
+              <Lock className="h-4.5 w-4.5" />
             </Button>
           )}
 
@@ -97,20 +97,20 @@ export function FirmTopbar() {
             id="theme-toggle-btn"
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-full hover:bg-secondary cursor-pointer"
+            className="h-9 w-9 text-muted-foreground hover:text-foreground rounded-xl hover:bg-secondary cursor-pointer active:scale-95"
             aria-label="Toggle light and dark mode"
             onClick={() => setTheme((resolvedTheme || theme) === "dark" ? "light" : "dark")}
           >
-            <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <Sun className="h-4.5 w-4.5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-4.5 w-4.5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           </Button>
 
           {/* Profile */}
           <DropdownMenu>
-            <DropdownMenuTrigger className="h-8 gap-2 pl-1 pr-2.5 flex items-center rounded-full hover:bg-secondary transition-all outline-none cursor-pointer border border-transparent hover:border-border/60">
-              <Avatar className="h-6 w-6">
+            <DropdownMenuTrigger className="h-9 gap-2 pl-1.5 pr-2.5 flex items-center rounded-xl hover:bg-secondary transition-all outline-none cursor-pointer border border-transparent hover:border-border/60">
+              <Avatar className="h-7 w-7">
                 <AvatarImage src={user?.avatar} />
-                <AvatarFallback className="text-[10px] bg-secondary text-foreground font-medium border border-border/70">
+                <AvatarFallback className="text-xs bg-secondary text-foreground font-semibold border border-border/70">
                   {getInitials(user?.name || user?.email)}
                 </AvatarFallback>
               </Avatar>
@@ -119,16 +119,16 @@ export function FirmTopbar() {
               </span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 p-1.5 rounded-xl bg-card border-border/80">
-              <DropdownMenuLabel className="px-2 py-1.5">
-                <p className="text-xs font-medium text-foreground">{user?.name || "User"}</p>
-                <p className="text-[11px] text-muted-foreground truncate">{user?.email}</p>
+              <DropdownMenuLabel className="px-2.5 py-2">
+                <p className="text-sm font-semibold text-foreground">{user?.name || "User"}</p>
+                <p className="text-xs text-muted-foreground truncate mt-0.5">{user?.email}</p>
                 {role && (
-                  <Badge variant="outline" className="mt-1 text-[10px] font-mono py-0 font-normal">{role.name}</Badge>
+                  <Badge variant="outline" className="mt-1.5 text-[11px] font-mono py-0 font-normal">{role.name}</Badge>
                 )}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-xs cursor-pointer">
-                <User className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
+              <DropdownMenuItem className="text-xs py-2 cursor-pointer">
+                <User className="mr-2 h-4 w-4 text-muted-foreground" />
                 Profile
               </DropdownMenuItem>
               {isAndroidNative && (

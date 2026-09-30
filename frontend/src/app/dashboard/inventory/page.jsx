@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { SearchInput } from "@/components/shared/search-input";
@@ -17,11 +16,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Package, AlertTriangle, Loader2 } from "lucide-react";
 import { DEFAULT_UNITS } from "@/types/inventory.types";
 import { inventoryService } from "@/services/inventory.service";
+import { useAuth } from "@/contexts/auth-context";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 
 export default function InventoryPage() {
-  const { firmId } = useParams();
+  const { firm, loading: authLoading } = useAuth();
+  const firmId = firm?.id;
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -41,6 +42,7 @@ export default function InventoryPage() {
   const [sizesInput, setSizesInput] = useState("");
 
   const loadItems = useCallback(async () => {
+    if (!firmId) return;
     setLoading(true);
     try {
       const data = await inventoryService.getAll(firmId);
@@ -53,10 +55,12 @@ export default function InventoryPage() {
   }, [firmId]);
 
   useEffect(() => {
-    if (firmId) {
+    if (!authLoading && firmId) {
       loadItems();
+    } else if (!authLoading && !firmId) {
+      setLoading(false);
     }
-  }, [firmId, loadItems]);
+  }, [authLoading, firmId, loadItems]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -149,7 +153,7 @@ export default function InventoryPage() {
       <PageHeader
         title="Inventory"
         description="Manage stock, categories, and units"
-        breadcrumbs={[{ label: "Firm", href: `/firm/${firmId}` }, { label: "Inventory" }]}
+        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Inventory" }]}
         actions={
           <PermissionGate permission="Inventory.Create">
             <Button className="gap-2" onClick={() => setDialogOpen(true)}>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { SearchInput } from "@/components/shared/search-input";
@@ -23,7 +23,8 @@ import { userService } from "@/services/user.service";
 import { toast } from "sonner";
 
 export default function FirmUsersPage() {
-  const { firmId } = useParams();
+  const { firm, loading: authLoading } = useAuth();
+  const firmId = firm?.id;
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -47,8 +48,12 @@ export default function FirmUsersPage() {
   }, [firmId, search]);
 
   useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
+    if (!authLoading && firmId) {
+      loadUsers();
+    } else if (!authLoading && !firmId) {
+      setLoading(false);
+    }
+  }, [authLoading, firmId, loadUsers]);
 
   const handleInvite = async (e) => {
     e.preventDefault();
@@ -98,7 +103,7 @@ export default function FirmUsersPage() {
       <PageHeader
         title="Users"
         description="Manage users within this firm"
-        breadcrumbs={[{ label: "Firm", href: `/firm/${firmId}` }, { label: "Users" }]}
+        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Users" }]}
         actions={
           <PermissionGate permission="Users.Manage">
             <Button className="gap-2" onClick={() => setDialogOpen(true)}>

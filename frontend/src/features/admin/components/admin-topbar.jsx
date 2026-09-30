@@ -55,7 +55,7 @@ export function AdminTopbar() {
             className="gap-2 text-muted-foreground hover:text-foreground h-9 px-2.5"
             asChild
           >
-            <Link href="/firm/dev-firm-001">
+            <Link href="/dashboard">
               <Building2 className="h-4 w-4" />
               <span className="hidden sm:inline">Firm Dashboard</span>
             </Link>

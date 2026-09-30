@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { SearchInput } from "@/components/shared/search-input";
@@ -45,7 +45,8 @@ const SIZE_PRESETS = [
 ];
 
 export default function ItemsPage() {
-  const { firmId } = useParams();
+  const { firm, loading: authLoading } = useAuth();
+  const firmId = firm?.id;
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -90,10 +91,12 @@ export default function ItemsPage() {
   }, [firmId]);
 
   useEffect(() => {
-    if (firmId) {
+    if (!authLoading && firmId) {
       loadItems();
+    } else if (!authLoading && !firmId) {
+      setLoading(false);
     }
-  }, [firmId, loadItems]);
+  }, [authLoading, firmId, loadItems]);
 
   // Unique categories
   const categories = useMemo(() => {
@@ -438,7 +441,7 @@ export default function ItemsPage() {
         title="Items & Products"
         description="Add items with size options and pricing to directly use in Sale Vouchers and Inventory."
         breadcrumbs={[
-          { label: "Firm", href: `/firm/${firmId}` },
+          { label: "Dashboard", href: "/dashboard" },
           { label: "Items" },
         ]}
         actions={

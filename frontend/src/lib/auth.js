@@ -22,6 +22,30 @@ export function getGoogleRedirectURI() {
   let redirectUri = GOOGLE_REDIRECT_URI;
 
   if (typeof window !== "undefined") {
+    // 1. Check if user configured a VPS URL in the app (Crucial for Android / Capacitor app)
+    const storedVps =
+      window.localStorage.getItem("firm_vps_url") ||
+      window.localStorage.getItem("firm_api_url");
+
+    if (storedVps) {
+      let baseUrl = storedVps.trim().replace(/\/+$/, "");
+      if (baseUrl.toLowerCase().endsWith("/api")) {
+        baseUrl = baseUrl.slice(0, -4);
+      }
+      if (
+        baseUrl &&
+        !baseUrl.includes("10.0.2.2") &&
+        !baseUrl.includes("localhost") &&
+        !baseUrl.includes("127.0.0.1")
+      ) {
+        if (!/^https?:\/\//i.test(baseUrl)) {
+          baseUrl = `https://${baseUrl}`;
+        }
+        return `${baseUrl}/callback`;
+      }
+    }
+
+    // 2. Check current browser window location origin
     let origin = window.location.origin;
 
     // Tailscale Funnel is always served publicly over HTTPS
@@ -40,7 +64,16 @@ export function getGoogleRedirectURI() {
         origin.includes("cloudflare") ||
         origin.includes("trycloudflare.com"))
     ) {
-      redirectUri = `${origin}/callback`;
+      return `${origin}/callback`;
+    }
+
+    // 3. Fallback to configured PUBLIC_URL if present
+    if (PUBLIC_URL && !PUBLIC_URL.includes("localhost") && !PUBLIC_URL.includes("127.0.0.1")) {
+      let pub = PUBLIC_URL.trim().replace(/\/+$/, "");
+      if (!/^https?:\/\//i.test(pub)) {
+        pub = `https://${pub}`;
+      }
+      return `${pub}/callback`;
     }
   }
 

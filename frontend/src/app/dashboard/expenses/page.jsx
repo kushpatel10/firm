@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { SearchInput } from "@/components/shared/search-input";
@@ -16,11 +15,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Receipt, Loader2, Edit, Trash2 } from "lucide-react";
 import { DEFAULT_EXPENSE_CATEGORIES } from "@/types/expense.types";
 import { expenseService } from "@/services/expense.service";
+import { useAuth } from "@/contexts/auth-context";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { toast } from "sonner";
 
 export default function ExpensesPage() {
-  const { firmId } = useParams();
+  const { firm, loading: authLoading } = useAuth();
+  const firmId = firm?.id;
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -46,6 +47,7 @@ export default function ExpensesPage() {
   const [editAmount, setEditAmount] = useState("");
 
   const loadExpenses = useCallback(async () => {
+    if (!firmId) return;
     setLoading(true);
     try {
       const data = await expenseService.getAll(firmId);
@@ -58,10 +60,12 @@ export default function ExpensesPage() {
   }, [firmId]);
 
   useEffect(() => {
-    if (firmId) {
+    if (!authLoading && firmId) {
       loadExpenses();
+    } else if (!authLoading && !firmId) {
+      setLoading(false);
     }
-  }, [firmId, loadExpenses]);
+  }, [authLoading, firmId, loadExpenses]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -148,26 +152,32 @@ export default function ExpensesPage() {
   };
 
   const columns = [
-    { key: "createdAt", label: "Date", render: (val) => formatDate(val), sortable: true },
     {
-      key: "category",
-      label: "Category",
-      render: (val, row) => (
-        <span className="flex items-center gap-2 font-medium text-xs">
-          <span
-            className={`h-2.5 w-2.5 rounded-full shrink-0 ${
-              row.expenseType === "KACHU"
-                ? "bg-black border border-slate-600 shadow-2xs"
-                : "bg-white border border-slate-300 shadow-2xs"
-            }`}
-          />
-          {val}
-        </span>
+      key: "expenseType",
+      label: "Ledger",
+      render: (val) => (
+        <span
+          className={`inline-block h-3.5 w-3.5 rounded-full border shadow-xs ${
+            val === "KACHU" ? "bg-black border-slate-700" : "bg-white border-slate-300"
+          }`}
+          title={val === "KACHU" ? "Black Ledger" : "White Ledger"}
+        />
       ),
-      sortable: true,
     },
-    { key: "description", label: "Description" },
-    { key: "amount", label: "Amount", render: (val) => formatCurrency(val || 0), sortable: true },
+    { key: "category", label: "Category", sortable: true },
+    { key: "description", label: "Description", render: (val) => val || "—" },
+    {
+      key: "amount",
+      label: "Amount",
+      sortable: true,
+      render: (val) => formatCurrency(val),
+    },
+    {
+      key: "date",
+      label: "Date",
+      sortable: true,
+      render: (val) => formatDate(val),
+    },
     {
       key: "actions",
       label: "Actions",
@@ -200,13 +210,19 @@ export default function ExpensesPage() {
     let list = expenses.filter((e) => {
       if (search) {
         const q = search.toLowerCase();
-        const matchCat = e.category?.toLowerCase().includes(q);
+        const matchCategory = e.category?.toLowerCase().includes(q);
         const matchDesc = e.description?.toLowerCase().includes(q);
-        if (!matchCat && !matchDesc) return false;
+        if (!matchCategory && !matchDesc) return false;
       }
-      if (categoryFilter.length > 0 && !categoryFilter.includes(e.category)) return false;
-      if (colorFilter === "PAKU" && e.expenseType === "KACHU") return false;
-      if (colorFilter === "KACHU" && e.expenseType !== "KACHU") return false;
+
+      if (categoryFilter.length > 0 && !categoryFilter.includes(e.category)) {
+        return false;
+      }
+
+      if (colorFilter !== "all" && e.expenseType !== colorFilter) {
+        return false;
+      }
+
       return true;
     });
 
@@ -218,7 +234,7 @@ export default function ExpensesPage() {
       <PageHeader
         title="Expenses"
         description="Track daily and monthly expenses with ledger classification"
-        breadcrumbs={[{ label: "Firm", href: `/firm/${firmId}` }, { label: "Expenses" }]}
+        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Expenses" }]}
         actions={
           <PermissionGate permission="Expense.Create">
             <Button className="gap-2" onClick={() => setDialogOpen(true)}>
@@ -240,7 +256,7 @@ export default function ExpensesPage() {
           />
 
           {/* Refined compact color filter */}
-          <div className="flex items-center gap-1.5 h-9 px-2 border rounded-lg bg-card/60 ml-auto sm:ml-0">
+          <div className="flex items-center gap-2 h-10 px-2.5 border border-border/80 rounded-xl bg-card ml-auto sm:ml-0">
             <button
               type="button"
               onClick={() => setColorFilter(colorFilter === "PAKU" ? "all" : "PAKU")}

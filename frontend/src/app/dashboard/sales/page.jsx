@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { SearchInput } from "@/components/shared/search-input";
@@ -33,8 +32,8 @@ import { formatCurrency, formatDate, numberToWords } from "@/lib/utils";
 import { toast } from "sonner";
 
 export default function SalesPage() {
-  const { firmId } = useParams();
-  const { firm: authFirm } = useAuth();
+  const { firm: authFirm, loading: authLoading } = useAuth();
+  const firmId = authFirm?.id;
   const [sales, setSales] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
@@ -118,7 +117,7 @@ export default function SalesPage() {
   }, [firmId]);
 
   useEffect(() => {
-    if (firmId) {
+    if (!authLoading && firmId) {
       loadVaultStatus();
       loadSalesData();
       customerService.getAll(firmId).then((res) => {
@@ -127,8 +126,10 @@ export default function SalesPage() {
       inventoryService.getAll(firmId).then((res) => {
         setInventoryItems(res?.inventoryItems || res || []);
       }).catch(() => {});
+    } else if (!authLoading && !firmId) {
+      setLoading(false);
     }
-  }, [firmId, loadSalesData, loadVaultStatus]);
+  }, [authLoading, firmId, loadSalesData, loadVaultStatus]);
 
   const handleUnlockVault = async (e) => {
     e.preventDefault();
@@ -759,7 +760,7 @@ export default function SalesPage() {
       <PageHeader
         title="Sales Vouchers"
         description="Tally-style sales billing with RSA-2048 Public Key Encryption"
-        breadcrumbs={[{ label: "Firm", href: `/firm/${firmId}` }, { label: "Sales" }]}
+        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Sales" }]}
         actions={
           <PermissionGate permission="Sales.Create">
             <Button className="gap-2" onClick={() => setCreateDialogOpen(true)}>
@@ -817,7 +818,7 @@ export default function SalesPage() {
           />
 
           {/* Refined compact color filter */}
-          <div className="flex items-center gap-1.5 h-9 px-2 border rounded-lg bg-card/60 ml-auto sm:ml-0">
+          <div className="flex items-center gap-2 h-10 px-2.5 border border-border/80 rounded-xl bg-card ml-auto sm:ml-0">
             <button
               type="button"
               onClick={() => setColorFilter(colorFilter === "PAKU" ? "all" : "PAKU")}
@@ -878,69 +879,67 @@ export default function SalesPage() {
             />
           ) : (
             filteredSales.map((sale) => (
-              <div key={sale.id} className="border rounded-2xl p-4 bg-card space-y-3 shadow-xs">
+              <div key={sale.id} className="border border-border/80 rounded-2xl p-4 bg-card space-y-3 shadow-xs">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span
-                      className={`h-2.5 w-2.5 rounded-full shrink-0 ${
-                        sale.saleType === "KACHU"
-                          ? "bg-black border border-slate-600 shadow-2xs"
-                          : "bg-white border border-slate-300 shadow-2xs"
-                      }`}
-                    />
                     <span className="font-mono text-xs font-bold text-foreground">
                       {sale.invoiceNumber || `INV-${sale.id?.slice(0, 6)}`}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Badge className={sale.saleType === "KACHU" ? "bg-black text-white text-[10px] px-2 py-0" : "bg-white text-slate-900 border text-[10px] px-2 py-0"}>
-                      {sale.saleType === "KACHU" ? "Kachu" : "Paku"}
-                    </Badge>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-block h-3.5 w-3.5 rounded-full border shrink-0 shadow-xs ${
+                        sale.saleType === "KACHU"
+                          ? "bg-black border-slate-600 dark:border-neutral-500"
+                          : "bg-white border-slate-300 dark:border-neutral-300"
+                      }`}
+                      title={sale.saleType === "KACHU" ? "Black Ledger" : "White Ledger"}
+                    />
                     <StatusBadge status={sale.status || "CONFIRMED"} />
                   </div>
                 </div>
 
                 <div className="flex justify-between items-baseline pt-0.5">
                   <div className="min-w-0 pr-2">
-                    <p className="font-bold text-sm text-foreground truncate">
+                    <p className="font-semibold text-sm sm:text-base text-foreground truncate">
                       {sale.customerName || sale.customer?.name || "Walk-in Customer"}
                     </p>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {formatDate(sale.createdAt || sale.date)}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="font-mono text-base font-extrabold text-primary">
+                    <p className="font-mono text-base sm:text-lg font-bold text-foreground">
                       {formatCurrency(sale.total || 0)}
                     </p>
-                    <p className="text-[10px] text-muted-foreground font-medium">
+                    <p className="text-xs text-muted-foreground font-medium mt-0.5">
                       {sale.items?.length || 1} item{sale.items?.length === 1 ? "" : "s"}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 pt-2 border-t">
+                <div className="flex items-center gap-2 pt-2.5 border-t border-border/60">
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1 h-9 text-xs gap-1.5 font-medium"
+                    className="flex-1 h-9.5 text-xs sm:text-sm gap-2 font-medium rounded-xl"
                     onClick={() => viewInvoice(sale)}
                   >
-                    <FileText className="h-3.5 w-3.5" /> View Bill
+                    <FileText className="h-4 w-4" /> View Bill
                   </Button>
                   <Button
                     size="sm"
                     variant="secondary"
-                    className="h-9 px-3 text-xs gap-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-semibold"
+                    className="h-9.5 px-3.5 text-xs sm:text-sm gap-1.5 text-emerald-500 dark:text-emerald-400 font-semibold rounded-xl"
                     onClick={() => handleWhatsAppShare(sale)}
                     title="Share via WhatsApp"
                   >
-                    <Share2 className="h-3.5 w-3.5" /> WhatsApp
+                    <Share2 className="h-4 w-4" /> WhatsApp
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-9 w-9 p-0"
+                    className="h-9.5 w-9.5 p-0 rounded-xl"
                     title="Edit Voucher"
                     onClick={() => openEditSale(sale)}
                   >

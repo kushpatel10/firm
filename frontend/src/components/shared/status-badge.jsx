@@ -3,40 +3,40 @@ import { cn } from "@/lib/utils";
 
 const STATUS_CONFIG = {
   ACTIVE: {
-    style: "border-border/80 bg-secondary/80 text-foreground",
-    dot: "bg-foreground",
+    style: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    dot: "bg-emerald-500",
   },
   CONFIRMED: {
-    style: "border-border/80 bg-secondary/80 text-foreground",
-    dot: "bg-foreground",
+    style: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    dot: "bg-emerald-500",
   },
   DELIVERED: {
-    style: "border-border/80 bg-secondary/80 text-foreground",
-    dot: "bg-foreground",
+    style: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    dot: "bg-emerald-500",
   },
   RECEIVED: {
-    style: "border-border/80 bg-secondary/80 text-foreground",
-    dot: "bg-foreground",
+    style: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    dot: "bg-emerald-500",
   },
   ORDERED: {
-    style: "border-border/70 bg-secondary/50 text-foreground/90",
-    dot: "bg-muted-foreground",
+    style: "border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400",
+    dot: "bg-sky-500",
   },
   DRAFT: {
-    style: "border-border/60 bg-transparent text-muted-foreground",
-    dot: "bg-muted-foreground/60",
+    style: "border-border/70 bg-secondary/60 text-muted-foreground",
+    dot: "bg-muted-foreground/70",
   },
   INACTIVE: {
-    style: "border-border/50 bg-transparent text-muted-foreground/80",
-    dot: "bg-muted-foreground/40",
+    style: "border-border/60 bg-transparent text-muted-foreground",
+    dot: "bg-muted-foreground/50",
   },
   CLOSED: {
-    style: "border-border/50 bg-transparent text-muted-foreground/80",
-    dot: "bg-muted-foreground/40",
+    style: "border-border/60 bg-transparent text-muted-foreground",
+    dot: "bg-muted-foreground/50",
   },
   ARCHIVED: {
-    style: "border-border/50 bg-transparent text-muted-foreground/80",
-    dot: "bg-muted-foreground/40",
+    style: "border-border/60 bg-transparent text-muted-foreground",
+    dot: "bg-muted-foreground/50",
   },
   SUSPENDED: {
     style: "border-destructive/30 bg-destructive/10 text-destructive",
@@ -49,7 +49,7 @@ const STATUS_CONFIG = {
 };
 
 /**
- * ChatGPT-inspired sleek minimalist status pill badge.
+ * Modern minimalist status pill badge with readable 12px text.
  * @param {Object} props
  * @param {string} props.status
  * @param {string} [props.className]
@@ -65,7 +65,7 @@ export function StatusBadge({ status, className }) {
     <Badge
       variant="outline"
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-normal transition-colors",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium tracking-normal transition-colors shrink-0",
         config.style,
         className
       )}

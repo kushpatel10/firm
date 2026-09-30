@@ -28,17 +28,17 @@ export function FilterDropdown({ label, options, selected = [], onSelectionChang
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Filter className="h-4 w-4" />
-          {label}
+        <Button variant="outline" size="default" className="h-10 rounded-xl border-border/80 bg-card gap-2 text-xs sm:text-sm font-medium">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <span>{label}</span>
           {selected.length > 0 && (
-            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs font-semibold rounded-md">
               {selected.length}
             </Badge>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-56 p-3" align="start">
+      <PopoverContent className="w-56 p-3 rounded-xl bg-card border-border/80" align="start">
         <div className="space-y-2">
           {options.map((opt) => (
             <label

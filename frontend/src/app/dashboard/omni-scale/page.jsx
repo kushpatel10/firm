@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,7 +51,6 @@ const SCALE_PRESETS = [
 ];
 
 export default function OmniScalePage() {
-  const { firmId } = useParams();
   const [activeTab, setActiveTab] = useState("cft");
 
   // ──────────────────────────────────────────────
@@ -341,7 +339,7 @@ Generated on: ${new Date().toLocaleString()}`;
       <PageHeader
         title="Omni Scale Calculator"
         description="Universal Cubic Feet (CFT) measurement, architectural ratio scaling, and batch production calculator"
-        breadcrumbs={[{ label: "Firm", href: `/firm/${firmId}` }, { label: "Omni Scale" }]}
+        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Omni Scale" }]}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleCopySummary} className="gap-1.5 text-xs">

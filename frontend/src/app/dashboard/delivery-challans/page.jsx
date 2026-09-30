@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { SearchInput } from "@/components/shared/search-input";
@@ -16,11 +15,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, FileText, Loader2 } from "lucide-react";
 import { deliveryChallanService } from "@/services/delivery-challan.service";
 import { customerService } from "@/services/customer.service";
+import { useAuth } from "@/contexts/auth-context";
 import { formatDate } from "@/lib/utils";
 import { toast } from "sonner";
 
 export default function DeliveryChallansPage() {
-  const { firmId } = useParams();
+  const { firm, loading: authLoading } = useAuth();
+  const firmId = firm?.id;
   const [challans, setChallans] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +36,7 @@ export default function DeliveryChallansPage() {
   const [status, setStatus] = useState("DELIVERED");
 
   const loadChallans = useCallback(async () => {
+    if (!firmId) return;
     setLoading(true);
     try {
       const data = await deliveryChallanService.getAll(firmId);
@@ -47,11 +49,13 @@ export default function DeliveryChallansPage() {
   }, [firmId]);
 
   useEffect(() => {
-    if (firmId) {
+    if (!authLoading && firmId) {
       loadChallans();
       customerService.getAll(firmId).then(setCustomers).catch(() => {});
+    } else if (!authLoading && !firmId) {
+      setLoading(false);
     }
-  }, [firmId, loadChallans]);
+  }, [authLoading, firmId, loadChallans]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -90,7 +94,7 @@ export default function DeliveryChallansPage() {
       <PageHeader
         title="Delivery Challans"
         description="Generate and manage delivery challans"
-        breadcrumbs={[{ label: "Firm", href: `/firm/${firmId}` }, { label: "Delivery Challans" }]}
+        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Delivery Challans" }]}
         actions={
           <PermissionGate permission="DeliveryChallans.Create">
             <Button className="gap-2" onClick={() => setDialogOpen(true)}>

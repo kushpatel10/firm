@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { SearchInput } from "@/components/shared/search-input";
@@ -12,13 +12,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, UserCircle, Loader2, Edit, Trash2 } from "lucide-react";
-import { customerService } from "@/services/customer.service";
+import { Plus, Truck, Loader2, Edit, Trash2 } from "lucide-react";
+import { supplierService } from "@/services/supplier.service";
 import { toast } from "sonner";
 
-export default function CustomersPage() {
-  const { firmId } = useParams();
-  const [customers, setCustomers] = useState([]);
+export default function SuppliersPage() {
+  const { firm, loading: authLoading } = useAuth();
+  const firmId = firm?.id;
+  const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -26,7 +27,7 @@ export default function CustomersPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [search, setSearch] = useState("");
 
   // Create Form state
@@ -41,111 +42,113 @@ export default function CustomersPage() {
   const [editPhone, setEditPhone] = useState("");
   const [editAddress, setEditAddress] = useState("");
 
-  const loadCustomers = useCallback(async () => {
+  const loadSuppliers = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await customerService.getAll(firmId);
-      setCustomers(data?.customers || data || []);
+      const data = await supplierService.getAll(firmId);
+      setSuppliers(data?.suppliers || data || []);
     } catch (err) {
-      toast.error(err.message || "Failed to load customers");
+      toast.error(err.message || "Failed to load suppliers");
     } finally {
       setLoading(false);
     }
   }, [firmId]);
 
   useEffect(() => {
-    if (firmId) {
-      loadCustomers();
+    if (!authLoading && firmId) {
+      loadSuppliers();
+    } else if (!authLoading && !firmId) {
+      setLoading(false);
     }
-  }, [firmId, loadCustomers]);
+  }, [authLoading, firmId, loadSuppliers]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!name.trim()) {
-      toast.error("Customer name is required");
+      toast.error("Supplier name is required");
       return;
     }
 
     setSubmitting(true);
     try {
-      await customerService.create(firmId, {
+      await supplierService.create(firmId, {
         name: name.trim(),
         email: email.trim() || undefined,
         phone: phone.trim() || undefined,
         address: address.trim() || undefined,
       });
-      toast.success(`Customer "${name.trim()}" added successfully!`);
+      toast.success(`Supplier "${name.trim()}" added successfully!`);
       setDialogOpen(false);
       setName("");
       setEmail("");
       setPhone("");
       setAddress("");
-      loadCustomers();
+      loadSuppliers();
     } catch (err) {
-      toast.error(err.message || "Failed to add customer");
+      toast.error(err.message || "Failed to add supplier");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const openEditDialog = (cust) => {
-    setSelectedCustomer(cust);
-    setEditName(cust.name || "");
-    setEditEmail(cust.email || "");
-    setEditPhone(cust.phone || "");
-    setEditAddress(cust.address || "");
+  const openEditDialog = (sup) => {
+    setSelectedSupplier(sup);
+    setEditName(sup.name || "");
+    setEditEmail(sup.email || "");
+    setEditPhone(sup.phone || "");
+    setEditAddress(sup.address || "");
     setEditDialogOpen(true);
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    if (!editName.trim() || !selectedCustomer) {
-      toast.error("Customer name is required");
+    if (!editName.trim() || !selectedSupplier) {
+      toast.error("Supplier name is required");
       return;
     }
 
     setSubmitting(true);
     try {
-      await customerService.update(firmId, selectedCustomer.id, {
+      await supplierService.update(firmId, selectedSupplier.id, {
         name: editName.trim(),
         email: editEmail.trim() || undefined,
         phone: editPhone.trim() || undefined,
         address: editAddress.trim() || undefined,
       });
-      toast.success(`Party name updated to "${editName.trim()}"!`);
+      toast.success(`Supplier name updated to "${editName.trim()}"!`);
       setEditDialogOpen(false);
-      setSelectedCustomer(null);
-      loadCustomers();
+      setSelectedSupplier(null);
+      loadSuppliers();
     } catch (err) {
-      toast.error(err.message || "Failed to update customer");
+      toast.error(err.message || "Failed to update supplier");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const openDeleteDialog = (cust) => {
-    setSelectedCustomer(cust);
+  const openDeleteDialog = (sup) => {
+    setSelectedSupplier(sup);
     setDeleteDialogOpen(true);
   };
 
   const handleDelete = async () => {
-    if (!selectedCustomer) return;
+    if (!selectedSupplier) return;
     setSubmitting(true);
     try {
-      await customerService.delete(firmId, selectedCustomer.id);
-      toast.success(`Customer "${selectedCustomer.name}" deleted!`);
+      await supplierService.delete(firmId, selectedSupplier.id);
+      toast.success(`Supplier "${selectedSupplier.name}" deleted!`);
       setDeleteDialogOpen(false);
-      setSelectedCustomer(null);
-      loadCustomers();
+      setSelectedSupplier(null);
+      loadSuppliers();
     } catch (err) {
-      toast.error(err.message || "Failed to delete customer");
+      toast.error(err.message || "Failed to delete supplier");
     } finally {
       setSubmitting(false);
     }
   };
 
   const columns = [
-    { key: "name", label: "Party / Customer Name", sortable: true },
+    { key: "name", label: "Supplier / Vendor Name", sortable: true },
     { key: "phone", label: "Phone", render: (val) => val || "—" },
     { key: "email", label: "Email", render: (val) => val || "—" },
     { key: "address", label: "Address", render: (val) => val || "—" },
@@ -158,7 +161,7 @@ export default function CustomersPage() {
             size="sm"
             variant="ghost"
             className="h-8 w-8 p-0"
-            title="Edit Party Details"
+            title="Edit Supplier"
             onClick={() => openEditDialog(row)}
           >
             <Edit className="h-4 w-4 text-muted-foreground hover:text-foreground" />
@@ -167,7 +170,7 @@ export default function CustomersPage() {
             size="sm"
             variant="ghost"
             className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
-            title="Delete Party"
+            title="Delete Supplier"
             onClick={() => openDeleteDialog(row)}
           >
             <Trash2 className="h-4 w-4" />
@@ -177,62 +180,62 @@ export default function CustomersPage() {
     },
   ];
 
-  const filteredCustomers = customers.filter((c) => {
+  const filteredSuppliers = suppliers.filter((s) => {
     if (!search) return true;
     const q = search.toLowerCase();
     return (
-      c.name?.toLowerCase().includes(q) ||
-      c.email?.toLowerCase().includes(q) ||
-      c.phone?.toLowerCase().includes(q)
+      s.name?.toLowerCase().includes(q) ||
+      s.email?.toLowerCase().includes(q) ||
+      s.phone?.toLowerCase().includes(q)
     );
   });
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Customers"
-        description="Manage your party directory and customer records"
-        breadcrumbs={[{ label: "Firm", href: `/firm/${firmId}` }, { label: "Customers" }]}
+        title="Suppliers"
+        description="Manage your supplier directory and vendor details"
+        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Suppliers" }]}
         actions={
-          <PermissionGate permission="Customers.Create">
+          <PermissionGate permission="Suppliers.Create">
             <Button className="gap-2" onClick={() => setDialogOpen(true)}>
               <Plus className="h-4 w-4" />
-              Add Customer
+              Add Supplier
             </Button>
           </PermissionGate>
         }
       />
 
-      <SearchInput placeholder="Search party name, phone, or email…" onSearch={setSearch} className="sm:w-80" />
+      <SearchInput placeholder="Search supplier name, phone, or email…" onSearch={setSearch} className="sm:w-80" />
 
       <DataTable
         columns={columns}
-        data={filteredCustomers}
+        data={filteredSuppliers}
         loading={loading}
         emptyState={
           <EmptyState
-            icon={<UserCircle className="h-8 w-8 text-muted-foreground" />}
-            title="No customers yet"
-            description="Add customer parties to track orders and maintain relationships."
-            actionLabel="Add Customer"
+            icon={<Truck className="h-8 w-8 text-muted-foreground" />}
+            title="No suppliers yet"
+            description="Add suppliers to manage purchase orders and track supply chains."
+            actionLabel="Add Supplier"
             onAction={() => setDialogOpen(true)}
           />
         }
       />
 
-      {/* Add Customer Dialog */}
+      {/* Add Supplier Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Add Customer</DialogTitle>
-            <DialogDescription>Save a new party / customer to your firm directory.</DialogDescription>
+            <DialogTitle>Add Supplier</DialogTitle>
+            <DialogDescription>Save a new supplier / vendor to your firm directory.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Customer / Party Name *</Label>
+              <Label htmlFor="name">Supplier / Vendor Name *</Label>
               <Input
                 id="name"
-                placeholder="Full name or Business name"
+                placeholder="Business or Vendor Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -252,7 +255,7 @@ export default function CustomersPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="customer@example.com"
+                placeholder="supplier@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -273,23 +276,23 @@ export default function CustomersPage() {
               </Button>
               <Button type="submit" disabled={submitting}>
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Add Customer
+                Add Supplier
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Customer Dialog */}
+      {/* Edit Supplier Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Party / Customer</DialogTitle>
-            <DialogDescription>Update party name and contact details.</DialogDescription>
+            <DialogTitle>Edit Supplier / Vendor</DialogTitle>
+            <DialogDescription>Update supplier name and contact details.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleUpdate} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-name">Customer / Party Name *</Label>
+              <Label htmlFor="edit-name">Supplier Name *</Label>
               <Input
                 id="edit-name"
                 value={editName}
@@ -336,13 +339,13 @@ export default function CustomersPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Customer Confirmation Dialog */}
+      {/* Delete Supplier Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Delete Customer</DialogTitle>
+            <DialogTitle>Delete Supplier</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{selectedCustomer?.name}"? This action cannot be undone.
+              Are you sure you want to delete "{selectedSupplier?.name}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
@@ -351,7 +354,7 @@ export default function CustomersPage() {
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={submitting}>
               {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Delete Customer
+              Delete Supplier
             </Button>
           </DialogFooter>
         </DialogContent>

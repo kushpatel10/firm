@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,8 @@ const REPORT_CARDS = [
 ];
 
 export default function ReportsPage() {
-  const { firmId } = useParams();
+  const { firm } = useAuth();
+  const firmId = firm?.id;
   const [activeReport, setActiveReport] = useState(null);
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -78,7 +79,7 @@ export default function ReportsPage() {
       <PageHeader
         title="Reports"
         description="Generate and view business reports"
-        breadcrumbs={[{ label: "Firm", href: `/firm/${firmId}` }, { label: "Reports" }]}
+        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Reports" }]}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

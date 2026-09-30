@@ -22,7 +22,11 @@
     "start:tunnel": "concurrently -n \"backend,frontend,tunnel\" -c \"blue,green,magenta\" \"npm run start:backend\" \"npm run start:frontend\" \"node scripts/cloudflare-tunnel.js\"",
     "cap:build": "cd frontend && npm run cap:build",
     "cap:open": "cd frontend && npm run cap:open",
-    "install:all": "cd backend && npm install && cd ../frontend && npm install && cd ../database && npm install"
+    "install:all": "cd backend && npm install && cd ../frontend && npm install && cd ../database && npm install",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "pm2:stop": "pm2 stop ecosystem.config.cjs",
+    "pm2:restart": "pm2 restart ecosystem.config.cjs",
+    "pm2:logs": "pm2 logs"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

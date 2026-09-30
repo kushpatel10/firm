@@ -32,6 +32,10 @@ if (typeof window !== "undefined" && isNative()) {
             const token = decodeURIComponent(match[1]);
             storeToken(token);
             window.dispatchEvent(new CustomEvent("firm_auth_token_received", { detail: { token } }));
+            // Close in-app browser overlay if active
+            import("@capacitor/browser")
+              .then(({ Browser }) => Browser.close())
+              .catch(() => {});
           }
         }
       });
@@ -177,11 +181,9 @@ export function AuthProvider({ children }) {
       sessionStorage.removeItem("firm_user_logged_out");
     }
 
-    const isMobile =
+    const isCapacitorNative =
       typeof window !== "undefined" &&
-      (isNative() ||
-        window.location.protocol === "capacitor:" ||
-        /android|iphone|ipad|ipod/i.test(navigator.userAgent));
+      (isNative() || window.location.protocol === "capacitor:");
 
     if (isDevAuthBypass() || !process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
       return await devLogin();
@@ -189,7 +191,7 @@ export function AuthProvider({ children }) {
 
     const url = authService.getGoogleAuthUrl();
     if (typeof window !== "undefined") {
-      if (isMobile) {
+      if (isCapacitorNative) {
         try {
           const { Browser } = await import("@capacitor/browser");
           await Browser.open({ url });

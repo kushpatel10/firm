@@ -14,7 +14,7 @@ export default function HomePage() {
         if (user.isSuperAdmin) {
           router.replace("/admin");
         } else {
-          router.replace(firm?.id ? `/firm/${firm.id}` : "/firm/dev-firm-001");
+          router.replace("/dashboard");
         }
       } else {
         router.replace("/login");
