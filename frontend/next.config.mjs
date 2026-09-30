@@ -5,6 +5,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  allowedDevOrigins: [
+    "scraper.tail3aad92.ts.net",
+    "*.ts.net",
+    "localhost:3000",
+    "127.0.0.1:3000",
+    "*.trycloudflare.com",
+  ],
   images: {
     unoptimized: true,
   },
