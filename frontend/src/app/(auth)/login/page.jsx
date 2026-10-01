@@ -117,16 +117,16 @@ export default function LoginPage() {
             <span>Multi-Tenant Architecture</span>
           </div>
           <h1 className="text-3xl font-semibold leading-tight tracking-tight text-white">
-            Precision enterprise operations and cryptographic ledger.
+            Precision enterprise operations and financial management.
           </h1>
           <p className="text-sm text-zinc-400 leading-relaxed">
-            Multi-branch billing, hardware-backed vault security, real-time inventory reconciliation, and financial reporting.
+            Multi-branch billing, real-time inventory reconciliation, and comprehensive financial reporting.
           </p>
           <div className="grid grid-cols-2 gap-3 pt-2">
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3.5">
               <Shield className="h-4 w-4 mb-2 text-zinc-300" />
-              <p className="text-xs font-medium text-zinc-200">Encrypted Vault</p>
-              <p className="text-[11px] text-zinc-400 mt-0.5">RSA-2048 hybrid RAM security</p>
+              <p className="text-xs font-medium text-zinc-200">Role-Based Access</p>
+              <p className="text-[11px] text-zinc-400 mt-0.5">Granular branch & user controls</p>
             </div>
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3.5">
               <Building2 className="h-4 w-4 mb-2 text-zinc-300" />

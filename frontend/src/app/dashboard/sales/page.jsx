@@ -17,13 +17,12 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Plus, ShoppingCart, Loader2, Trash2, Edit, Printer, FileText, Building2, User, Lock, Unlock, Key, ShieldCheck, Download, Share2, Tag, Boxes, Sparkles, CheckCircle2, Phone, MapPin, Send
+  Plus, ShoppingCart, Loader2, Trash2, Edit, Printer, FileText, Building2, User, Download, Share2, Tag, Boxes, Sparkles, CheckCircle2, Phone, MapPin, Send
 } from "lucide-react";
 import { SALE_STATUS } from "@/types/sales.types";
 import { salesService } from "@/services/sales.service";
 import { customerService } from "@/services/customer.service";
 import { inventoryService } from "@/services/inventory.service";
-import { vaultService } from "@/services/vault.service";
 import { useAuth } from "@/contexts/auth-context";
 import { ItemCombobox } from "@/features/firm/components/item-combobox";
 import { SizeSelector } from "@/features/firm/components/size-selector";
@@ -39,13 +38,6 @@ export default function SalesPage() {
   const [inventoryItems, setInventoryItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-
-  // Key Vault States
-  const [vaultStatus, setVaultStatus] = useState({ unlocked: false, timeRemainingMs: 0 });
-  const [vaultDialogOpen, setVaultDialogOpen] = useState(false);
-  const [privateKeyInput, setPrivateKeyInput] = useState("");
-  const [ttlInput, setTtlInput] = useState("48");
-  const [generatedKeys, setGeneratedKeys] = useState(null);
 
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -95,14 +87,6 @@ export default function SalesPage() {
   const [editStatus, setEditStatus] = useState("CONFIRMED");
   const [editLineItems, setEditLineItems] = useState([]);
 
-  const loadVaultStatus = useCallback(async () => {
-    if (!firmId) return;
-    try {
-      const st = await vaultService.getStatus(firmId);
-      setVaultStatus(st || { unlocked: false });
-    } catch (e) {}
-  }, [firmId]);
-
   const loadSalesData = useCallback(async () => {
     if (!firmId) return;
     setLoading(true);
@@ -118,7 +102,6 @@ export default function SalesPage() {
 
   useEffect(() => {
     if (!authLoading && firmId) {
-      loadVaultStatus();
       loadSalesData();
       customerService.getAll(firmId).then((res) => {
         setCustomers(res?.customers || res || []);
@@ -129,48 +112,7 @@ export default function SalesPage() {
     } else if (!authLoading && !firmId) {
       setLoading(false);
     }
-  }, [authLoading, firmId, loadSalesData, loadVaultStatus]);
-
-  const handleUnlockVault = async (e) => {
-    e.preventDefault();
-    if (!privateKeyInput.trim()) {
-      toast.error("Please paste your RSA Private Key");
-      return;
-    }
-    try {
-      await vaultService.unlock(firmId, privateKeyInput.trim(), parseInt(ttlInput) || 48);
-      toast.success("RAM Vault unlocked successfully!");
-      setVaultDialogOpen(false);
-      setPrivateKeyInput("");
-      loadVaultStatus();
-      loadSalesData();
-    } catch (err) {
-      toast.error(err.message || "Invalid Private Key for this firm");
-    }
-  };
-
-  const handleLockVault = async () => {
-    try {
-      await vaultService.lock(firmId);
-      toast.info("RAM Key Vault purged! Private Key deleted from memory.");
-      loadVaultStatus();
-      loadSalesData();
-    } catch (err) {
-      toast.error("Failed to lock vault");
-    }
-  };
-
-  const handleGenerateKeypair = async () => {
-    try {
-      const res = await vaultService.generateKeypair(firmId);
-      setGeneratedKeys(res);
-      toast.success("New RSA Keypair generated and vault unlocked!");
-      loadVaultStatus();
-      loadSalesData();
-    } catch (err) {
-      toast.error(err.message || "Failed to generate keypair");
-    }
-  };
+  }, [authLoading, firmId, loadSalesData]);
 
   // Helper to parse sizes array from inventory item
   const parseItemSizes = (item) => {
@@ -429,7 +371,7 @@ export default function SalesPage() {
         })),
       });
 
-      toast.success(`${saleType === "KACHU" ? "Black" : "White"} Sale voucher saved (Public-Key Encrypted)!`);
+      toast.success(`${saleType === "KACHU" ? "Black" : "White"} Sale voucher saved successfully!`);
       setCreateDialogOpen(false);
       resetForm();
       loadSalesData();
@@ -651,11 +593,7 @@ export default function SalesPage() {
     window.open(waUrl, "_blank");
   };
 
-  const formatTtlHours = (ms) => {
-    const hours = Math.floor(ms / (1000 * 60 * 60));
-    const mins = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}h ${mins}m remaining`;
-  };
+
 
   const columns = [
     {
@@ -759,7 +697,7 @@ export default function SalesPage() {
     <div className="space-y-6">
       <PageHeader
         title="Sales Vouchers"
-        description="Tally-style sales billing with RSA-2048 Public Key Encryption"
+        description="Tally-style sales billing and invoice management"
         breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Sales" }]}
         actions={
           <PermissionGate permission="Sales.Create">
@@ -770,42 +708,6 @@ export default function SalesPage() {
           </PermissionGate>
         }
       />
-
-      {/* Ephemeral RAM Vault Banner */}
-      <div className="border rounded-2xl p-4 bg-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className={`p-2.5 rounded-xl ${vaultStatus.unlocked ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"}`}>
-            {vaultStatus.unlocked ? <Unlock className="h-5 w-5" /> : <Lock className="h-5 w-5" />}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-sm">
-                {vaultStatus.unlocked ? "Ephemeral RAM Vault Unlocked" : "RAM Decryption Vault Locked"}
-              </h3>
-              <Badge className={vaultStatus.unlocked ? "bg-emerald-600 text-white" : "bg-amber-600 text-white"}>
-                {vaultStatus.unlocked ? formatTtlHours(vaultStatus.timeRemainingMs) : "LOCKED"}
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {vaultStatus.unlocked
-                ? "Private Key is active in server RAM. Decrypted details are visible to authorized users."
-                : "Staff can create new sales 24/7 (Public Key). Unlock with Private Key to decrypt historical records."}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          {vaultStatus.unlocked ? (
-            <Button size="sm" variant="outline" className="text-xs gap-1.5 text-destructive hover:bg-destructive/10" onClick={handleLockVault}>
-              <Lock className="h-3.5 w-3.5" /> Purge RAM Key
-            </Button>
-          ) : (
-            <Button size="sm" className="text-xs gap-1.5" onClick={() => setVaultDialogOpen(true)}>
-              <Key className="h-3.5 w-3.5" /> Unlock Decryption Vault
-            </Button>
-          )}
-        </div>
-      </div>
 
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
@@ -952,98 +854,7 @@ export default function SalesPage() {
         </div>
       </div>
 
-      {/* Unlock / Key Vault Modal */}
-      <Dialog open={vaultDialogOpen} onOpenChange={setVaultDialogOpen}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto w-[95vw] p-6 space-y-6">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg font-bold">
-              <ShieldCheck className="h-5 w-5 text-primary" />
-              RAM Key Vault Management
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              Paste your RSA Private Key to unlock RAM decryption or generate a new RSA Keypair for this firm.
-            </DialogDescription>
-          </DialogHeader>
 
-          <Tabs defaultValue="unlock">
-            <TabsList className="grid grid-cols-2 w-full">
-              <TabsTrigger value="unlock">Unlock Vault</TabsTrigger>
-              <TabsTrigger value="generate">Generate Keypair</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="unlock" className="space-y-4 mt-4">
-              <form onSubmit={handleUnlockVault} className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="pemKey">Paste RSA Private Key (PEM format)</Label>
-                  <Textarea
-                    id="pemKey"
-                    placeholder="-----BEGIN PRIVATE KEY-----&#10;...&#10;-----END PRIVATE KEY-----"
-                    rows={6}
-                    className="font-mono text-xs"
-                    value={privateKeyInput}
-                    onChange={(e) => setPrivateKeyInput(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="ttlSelect">RAM Expiry TTL</Label>
-                  <Select value={ttlInput} onValueChange={setTtlInput}>
-                    <SelectTrigger><SelectValue placeholder="Select Expiry Duration" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 Hour</SelectItem>
-                      <SelectItem value="12">12 Hours</SelectItem>
-                      <SelectItem value="24">24 Hours (1 Day)</SelectItem>
-                      <SelectItem value="48">48 Hours (2 Days)</SelectItem>
-                      <SelectItem value="168">7 Days</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <DialogFooter className="gap-2">
-                  <Button type="button" variant="outline" onClick={() => setVaultDialogOpen(false)}>Cancel</Button>
-                  <Button type="submit">Unlock RAM Vault</Button>
-                </DialogFooter>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="generate" className="space-y-4 mt-4">
-              <div className="space-y-3 border p-4 rounded-xl bg-muted/30 text-xs text-muted-foreground">
-                <p className="font-semibold text-foreground">Generate New RSA-2048 Keypair</p>
-                <p>The database will store ONLY the Public Key for 24/7 encrypted writing. You must download and save the Private Key safely.</p>
-                <Button type="button" onClick={handleGenerateKeypair} className="w-full gap-2">
-                  <Key className="h-4 w-4" /> Generate RSA Keypair & Save Public Key
-                </Button>
-              </div>
-
-              {generatedKeys && (
-                <div className="space-y-2 border p-3 rounded-xl bg-card">
-                  <Label className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
-                    <ShieldCheck className="h-4 w-4" /> Save Your Private Key Now!
-                  </Label>
-                  <Textarea readOnly value={generatedKeys.privateKey} rows={5} className="font-mono text-[10px]" />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="w-full gap-1.5 text-xs"
-                    onClick={() => {
-                      const element = document.createElement("a");
-                      const file = new Blob([generatedKeys.privateKey], { type: 'text/plain' });
-                      element.href = URL.createObjectURL(file);
-                      element.download = `firm_${firmId}_private_key.pem`;
-                      document.body.appendChild(element);
-                      element.click();
-                    }}
-                  >
-                    <Download className="h-3.5 w-3.5" /> Download Private Key File (.pem)
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </DialogContent>
-      </Dialog>
 
       {/* Spacious Tally-Style Create Sale Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>

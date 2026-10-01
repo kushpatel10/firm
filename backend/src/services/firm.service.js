@@ -65,18 +65,6 @@ const firmService = {
     });
     if (existing) throw new ConflictError("A firm with this name already exists");
 
-    const asymmetricCrypto = require("../utils/asymmetric-crypto");
-    const keyVaultService = require("../services/key-vault.service");
-
-    let publicKeyPem = data.masterBusinessKey || null;
-    let initialPrivateKey = null;
-
-    if (!publicKeyPem) {
-      const keyPair = await asymmetricCrypto.generateFirmKeyPairAsync();
-      publicKeyPem = keyPair.publicKeyPem;
-      initialPrivateKey = keyPair.privateKeyPem;
-    }
-
     const createdFirm = await prisma.firm.create({
       data: {
         name: data.name,
@@ -86,16 +74,10 @@ const firmService = {
         gstNumber: data.gstNumber || null,
         currency: data.currency || "INR",
         timezone: data.timezone || "Asia/Kolkata",
-        masterBusinessKey: publicKeyPem,
         createdBy: createdById,
         updatedBy: createdById,
       },
     });
-
-    if (initialPrivateKey) {
-      keyVaultService.unlockVault(createdFirm.id, initialPrivateKey, 48);
-      createdFirm.initialPrivateKey = initialPrivateKey; // Returned once for owner to download
-    }
 
     return createdFirm;
   },

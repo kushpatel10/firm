@@ -41,13 +41,11 @@ const dashboardService = {
       select: { id: true, total: true, date: true, status: true, customerName: true },
     });
 
-    const keyVaultService = require("./key-vault.service");
-    const asymmetricCrypto = require("../utils/asymmetric-crypto");
-    const privateKey = keyVaultService.getPrivateKey(firmId);
-
-    const decryptedRecentSales = recentSales.map((sale) => ({
+    const cleanRecentSales = recentSales.map((sale) => ({
       ...sale,
-      customerName: asymmetricCrypto.decryptWithPrivateKey(sale.customerName, privateKey),
+      customerName: (sale.customerName && sale.customerName.startsWith("enc:rsa:"))
+        ? "Customer"
+        : sale.customerName,
     }));
 
     return {
@@ -60,7 +58,7 @@ const dashboardService = {
         expensesCount: expenses._count.id || 0,
         totalInventory: inventoryCount || 0,
       },
-      recentSales: decryptedRecentSales,
+      recentSales: cleanRecentSales,
       recentActivity,
     };
   },

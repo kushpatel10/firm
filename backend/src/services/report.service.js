@@ -26,14 +26,14 @@ const reportService = {
       statusCounts[s.status] = (statusCounts[s.status] || 0) + 1;
     });
 
-    const keyVaultService = require("./key-vault.service");
-    const asymmetricCrypto = require("../utils/asymmetric-crypto");
-    const privateKey = keyVaultService.getPrivateKey(firmId);
-
-    const decryptedSales = sales.map((sale) => ({
+    const cleanSales = sales.map((sale) => ({
       ...sale,
-      customerName: asymmetricCrypto.decryptWithPrivateKey(sale.customerName, privateKey),
-      description: asymmetricCrypto.decryptWithPrivateKey(sale.description, privateKey),
+      customerName: (sale.customerName && sale.customerName.startsWith("enc:rsa:"))
+        ? (sale.customer?.name || "Customer")
+        : sale.customerName,
+      description: (sale.description && sale.description.startsWith("enc:rsa:"))
+        ? ""
+        : sale.description,
     }));
 
     return {
@@ -44,7 +44,7 @@ const reportService = {
         totalDiscount,
       },
       statusCounts,
-      sales: decryptedSales.slice(0, 50),
+      sales: cleanSales.slice(0, 50),
     };
   },
 

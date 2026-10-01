@@ -1,23 +1,21 @@
-import { apiClient } from "@/lib/api-client";
+/**
+ * Key Vault Service (Disabled)
+ */
 
 export const vaultService = {
-  async getStatus(firmId) {
-    const res = await apiClient.get(`/firms/${firmId}/vault/status`);
-    return res?.data;
+  async getStatus() {
+    return { unlocked: true, timeRemainingMs: 86400000 };
   },
 
-  async unlock(firmId, privateKey, ttlHours = 48) {
-    const res = await apiClient.post(`/firms/${firmId}/vault/unlock`, { privateKey, ttlHours });
-    return res?.data;
+  async unlock() {
+    return { unlocked: true };
   },
 
-  async lock(firmId) {
-    const res = await apiClient.post(`/firms/${firmId}/vault/lock`);
-    return res?.data;
+  async lock() {
+    return { unlocked: false };
   },
 
-  async generateKeypair(firmId) {
-    const res = await apiClient.post(`/firms/${firmId}/vault/generate-keypair`);
-    return res?.data;
+  async generateKeypair() {
+    return {};
   },
 };

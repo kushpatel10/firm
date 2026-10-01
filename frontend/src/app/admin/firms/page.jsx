@@ -47,7 +47,6 @@ export default function FirmsPage() {
   const [currency, setCurrency] = useState("INR");
   const [timezone, setTimezone] = useState("Asia/Kolkata");
   const [address, setAddress] = useState("");
-  const [masterBusinessKey, setMasterBusinessKey] = useState("");
 
   const loadFirms = useCallback(async () => {
     setLoading(true);
@@ -85,7 +84,6 @@ export default function FirmsPage() {
         currency,
         timezone,
         address,
-        masterBusinessKey,
       });
       toast.success(`Firm "${name}" created successfully!`);
       setDialogOpen(false);
@@ -95,7 +93,6 @@ export default function FirmsPage() {
       setGstNumber("");
       setPhone("");
       setAddress("");
-      setMasterBusinessKey("");
       loadFirms();
     } catch (err) {
       toast.error(err.message || "Failed to create firm");
@@ -252,19 +249,6 @@ export default function FirmsPage() {
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="masterKey">Master Business Key</Label>
-              <Input
-                id="masterKey"
-                type="password"
-                placeholder="Used for encrypting sensitive data"
-                value={masterBusinessKey}
-                onChange={(e) => setMasterBusinessKey(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                This key will be used to derive an encryption key for protecting sensitive business data.
-              </p>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={submitting}>

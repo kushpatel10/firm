@@ -1,13 +1,16 @@
 /**
  * Sales Service
- * Multi-tenant CRUD with item management.
+ * Multi-tenant CRUD with item management (plain text, no encryption).
  */
 
 const prisma = require("../config/database");
 const { NotFoundError } = require("../utils/errors");
 
-const asymmetricCrypto = require("../utils/asymmetric-crypto");
-const keyVaultService = require("./key-vault.service");
+function sanitizeEncryptedField(val, fallback = "") {
+  if (!val || typeof val !== "string") return val;
+  if (val.startsWith("enc:rsa:")) return fallback;
+  return val;
+}
 
 const salesService = {
   async getAll(firmId, { page = 1, pageSize = 20, search, status, saleType, branchId }) {
@@ -38,15 +41,13 @@ const salesService = {
       prisma.sale.count({ where }),
     ]);
 
-    // Decrypt fields if RAM vault is unlocked
-    const privateKey = keyVaultService.getPrivateKey(firmId);
-    const decryptedSales = sales.map((sale) => ({
+    const cleanSales = sales.map((sale) => ({
       ...sale,
-      customerName: asymmetricCrypto.decryptWithPrivateKey(sale.customerName, privateKey),
-      description: asymmetricCrypto.decryptWithPrivateKey(sale.description, privateKey),
+      customerName: sanitizeEncryptedField(sale.customerName, sale.customer?.name || "Customer"),
+      description: sanitizeEncryptedField(sale.description, ""),
     }));
 
-    return { sales: decryptedSales, total, page, pageSize };
+    return { sales: cleanSales, total, page, pageSize };
   },
 
   async getById(id, firmId) {
@@ -61,23 +62,15 @@ const salesService = {
     });
     if (!sale) throw new NotFoundError("Sale");
 
-    const privateKey = keyVaultService.getPrivateKey(firmId);
     return {
       ...sale,
-      customerName: asymmetricCrypto.decryptWithPrivateKey(sale.customerName, privateKey),
-      description: asymmetricCrypto.decryptWithPrivateKey(sale.description, privateKey),
+      customerName: sanitizeEncryptedField(sale.customerName, sale.customer?.name || "Customer"),
+      description: sanitizeEncryptedField(sale.description, ""),
     };
   },
 
   async create(data, firmId, createdById) {
     const { items = [], id: _, firm: __, customer: ___, branch: ____, ...saleData } = data;
-
-    // Fetch Firm Public Key for encryption
-    const firm = await prisma.firm.findUnique({
-      where: { id: firmId },
-      select: { masterBusinessKey: true },
-    });
-    const publicKey = firm?.masterBusinessKey;
 
     // Calculate subtotal from items if provided, or fallback to subtotal/total
     const subtotal = items.length > 0
@@ -106,22 +99,18 @@ const salesService = {
       generatedInvoiceNum = `${prefix}-${String(nextSeq).padStart(4, "0")}`;
     }
 
-    // Encrypt sensitive party name and description using Public Key
-    const encryptedCustomerName = publicKey ? asymmetricCrypto.encryptWithPublicKey(saleData.customerName, publicKey) : saleData.customerName;
-    const encryptedDescription = publicKey && saleData.description ? asymmetricCrypto.encryptWithPublicKey(saleData.description, publicKey) : saleData.description;
-
     const createdSale = await prisma.sale.create({
       data: {
         ...saleData,
         firmId,
-        customerName: encryptedCustomerName,
+        customerName: saleData.customerName,
         invoiceNumber: generatedInvoiceNum,
         subtotal,
         tax,
         discount,
         total,
         saleType: saleData.saleType || "PAKU",
-        description: encryptedDescription || null,
+        description: saleData.description || null,
         status: saleData.status || "CONFIRMED",
         createdBy: createdById,
         updatedBy: createdById,
@@ -140,14 +129,8 @@ const salesService = {
       include: { items: true, customer: true, firm: true },
     });
 
-    const privateKey = keyVaultService.getPrivateKey(firmId);
-    return {
-      ...createdSale,
-      customerName: asymmetricCrypto.decryptWithPrivateKey(createdSale.customerName, privateKey),
-      description: asymmetricCrypto.decryptWithPrivateKey(createdSale.description, privateKey),
-    };
+    return createdSale;
   },
-
 
   async update(id, data, firmId, updatedById) {
     await this.getById(id, firmId);
@@ -155,17 +138,11 @@ const salesService = {
     const { items, id: _, firmId: __, firm: ___, customer: ____, branch: _____, createdAt, updatedAt, ...saleData } = data;
     const updateData = { ...saleData, updatedBy: updatedById, updatedAt: new Date() };
 
-    const firm = await prisma.firm.findUnique({
-      where: { id: firmId },
-      select: { masterBusinessKey: true },
-    });
-    const publicKey = firm?.masterBusinessKey;
-
     if (saleData.customerName) {
-      updateData.customerName = publicKey ? asymmetricCrypto.encryptWithPublicKey(saleData.customerName, publicKey) : saleData.customerName;
+      updateData.customerName = saleData.customerName;
     }
     if (saleData.description !== undefined) {
-      updateData.description = publicKey && saleData.description ? asymmetricCrypto.encryptWithPublicKey(saleData.description, publicKey) : saleData.description;
+      updateData.description = saleData.description;
     }
 
     if (items) {
@@ -198,12 +175,7 @@ const salesService = {
       });
     });
 
-    const privateKey = keyVaultService.getPrivateKey(firmId);
-    return {
-      ...updatedSale,
-      customerName: asymmetricCrypto.decryptWithPrivateKey(updatedSale.customerName, privateKey),
-      description: asymmetricCrypto.decryptWithPrivateKey(updatedSale.description, privateKey),
-    };
+    return updatedSale;
   },
 
   async delete(id, firmId) {
