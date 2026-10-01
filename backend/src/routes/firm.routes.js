@@ -36,10 +36,11 @@ function requireFirmAccessOrSuperAdmin(permission = null) {
 // GET /api/firms — Super Admin only
 router.get("/", requireSuperAdmin, async (req, res, next) => {
   try {
-    const { page, pageSize, search, status } = req.query;
+    const { page, pageSize, limit, search, status } = req.query;
+    const parsedSize = parseInt(pageSize) || parseInt(limit) || 50;
     const result = await firmService.getAll({
       page: parseInt(page) || 1,
-      pageSize: parseInt(pageSize) || 20,
+      pageSize: Math.min(parsedSize, 500),
       search, status,
     });
     paginated(res, result.firms, result.total, result.page, result.pageSize);

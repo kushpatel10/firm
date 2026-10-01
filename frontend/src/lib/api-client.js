@@ -195,14 +195,24 @@ export function getApiBaseUrl() {
       return envUrl.replace("localhost", "10.0.2.2").replace("127.0.0.1", "10.0.2.2");
     }
 
-    // In all web browsers (Cloudflare Tunnel, custom domain, VPS IP, or localhost),
-    // always route through same-origin `/api` which Next.js reverse-proxies to Express.
-    // This eliminates CORS issues and means only 1 public port (3000) needs to be exposed/tunneled.
+    // In local development or local testing (localhost / 127.0.0.1), connect directly to Express
+    // backend (port 4000) to bypass Next.js dev server rewrite proxy overhead (~500ms penalty).
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return process.env.NEXT_PUBLIC_API_URL || `http://${hostname}:4000/api`;
+    }
+
+    // In reverse-proxied / tunneled environments (Cloudflare Tunnel, Tailscale Funnel, VPS IP),
+    // route through same-origin `/api` which Next.js reverse-proxies to Express.
     return `${window.location.origin}/api`;
   }
 
   return process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 }
+
+// In-flight GET request deduplication map to prevent redundant concurrent fetches
+const inFlightRequests = new Map();
+// Lightweight TTL cache for high-frequency idempotent lookups (e.g. /auth/session)
+const shortResponseCache = new Map();
 
 /**
  * Make an authenticated API request
@@ -211,67 +221,110 @@ export function getApiBaseUrl() {
  * @returns {Promise<any>}
  */
 async function request(endpoint, options = {}) {
+  const method = (options.method || "GET").toUpperCase();
   const token = getToken();
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}${endpoint}`;
+  const reqKey = `${method}:${url}:${token || ""}`;
 
-  const headers = {
-    "Content-Type": "application/json",
-    ...options.headers,
-  };
-
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
-  let response;
-  try {
-    response = await fetch(url, {
-      ...options,
-      headers,
-    });
-  } catch (err) {
-    throw new Error(`Failed to fetch (${url}): ${err?.message || "Backend server unreachable"}`);
-  }
-
-  // Handle authentication errors
-  if (response.status === 401) {
-    clearToken();
-    if (typeof window !== "undefined") {
-      if (!endpoint.startsWith("/auth/")) {
-        localStorage.setItem("firm_user_logged_out", "true");
-        sessionStorage.setItem("firm_user_logged_out", "true");
-      }
-      const currentPath = window.location.pathname;
-      if (
-        !endpoint.startsWith("/auth/") &&
-        !currentPath.startsWith("/login") &&
-        !currentPath.startsWith("/callback") &&
-        !currentPath.startsWith("/access-denied")
-      ) {
-        window.location.replace("/login");
+  // Cache & deduplication for GET requests
+  if (method === "GET") {
+    // 1. Check TTL cache for session endpoint (valid for 5s)
+    if (endpoint === "/auth/session") {
+      const cached = shortResponseCache.get(reqKey);
+      if (cached && Date.now() < cached.expiresAt) {
+        return cached.data;
       }
     }
-    throw new Error("Unauthorized");
+
+    // 2. Deduplicate identical in-flight requests happening concurrently
+    if (inFlightRequests.has(reqKey)) {
+      return inFlightRequests.get(reqKey);
+    }
+  } else {
+    // On mutations (POST/PUT/PATCH/DELETE), clear response cache
+    shortResponseCache.clear();
   }
 
-  // Handle forbidden
-  if (response.status === 403) {
-    throw new Error("Access Denied");
+  const execRequest = async () => {
+    const headers = {
+      "Content-Type": "application/json",
+      ...options.headers,
+    };
+
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    let response;
+    try {
+      response = await fetch(url, {
+        ...options,
+        headers,
+      });
+    } catch (err) {
+      throw new Error(`Failed to fetch (${url}): ${err?.message || "Backend server unreachable"}`);
+    }
+
+    // Handle authentication errors
+    if (response.status === 401) {
+      clearToken();
+      shortResponseCache.clear();
+      if (typeof window !== "undefined") {
+        if (!endpoint.startsWith("/auth/")) {
+          localStorage.setItem("firm_user_logged_out", "true");
+          sessionStorage.setItem("firm_user_logged_out", "true");
+        }
+        const currentPath = window.location.pathname;
+        if (
+          !endpoint.startsWith("/auth/") &&
+          !currentPath.startsWith("/login") &&
+          !currentPath.startsWith("/callback") &&
+          !currentPath.startsWith("/access-denied")
+        ) {
+          window.location.replace("/login");
+        }
+      }
+      throw new Error("Unauthorized");
+    }
+
+    // Handle forbidden
+    if (response.status === 403) {
+      throw new Error("Access Denied");
+    }
+
+    // Handle no content
+    if (response.status === 204) {
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || `API Error: ${response.status}`);
+    }
+
+    // Cache /auth/session responses for 5 seconds
+    if (method === "GET" && endpoint === "/auth/session") {
+      shortResponseCache.set(reqKey, {
+        data,
+        expiresAt: Date.now() + 5000,
+      });
+    }
+
+    return data;
+  };
+
+  if (method === "GET") {
+    const promise = execRequest();
+    inFlightRequests.set(reqKey, promise);
+    promise.finally(() => {
+      inFlightRequests.delete(reqKey);
+    });
+    return promise;
   }
 
-  // Handle no content
-  if (response.status === 204) {
-    return null;
-  }
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || `API Error: ${response.status}`);
-  }
-
-  return data;
+  return execRequest();
 }
 
 /**

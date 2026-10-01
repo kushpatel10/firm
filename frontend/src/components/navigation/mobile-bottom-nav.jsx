@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -10,7 +11,6 @@ import {
   ShoppingBag,
   Building2,
   Users,
-  ShieldAlert,
   Menu,
 } from "lucide-react";
 import { useSidebar } from "@/contexts/sidebar-context";
@@ -18,6 +18,43 @@ import { useSidebar } from "@/contexts/sidebar-context";
 export function MobileBottomNav() {
   const pathname = usePathname();
   const { toggleMobile, mobileOpen } = useSidebar();
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Auto-hide when virtual keyboard is open on mobile devices
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleResize = () => {
+      if (window.visualViewport) {
+        const heightDiff = window.innerHeight - window.visualViewport.height;
+        setIsKeyboardOpen(heightDiff > 140);
+      }
+    };
+
+    window.visualViewport?.addEventListener("resize", handleResize);
+    return () => {
+      window.visualViewport?.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  // Auto-hide when full-screen modal or dialog is open (body overflow hidden)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const observer = new MutationObserver(() => {
+      const isLocked = document.body.style.overflow === "hidden";
+      setIsModalOpen(isLocked);
+    });
+
+    observer.observe(document.body, { attributes: true, attributeFilter: ["style"] });
+    return () => observer.disconnect();
+  }, []);
+
+  // Do not render bottom nav when keyboard or modal is active
+  if (isKeyboardOpen || isModalOpen) {
+    return null;
+  }
 
   const isAdmin = pathname.startsWith("/admin");
 
@@ -73,9 +110,9 @@ export function MobileBottomNav() {
     <nav
       id="mobile-bottom-navigation"
       aria-label="Mobile Navigation"
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-md border-t border-border/80 pb-safe shadow-lg"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-card/95 backdrop-blur-md border-t border-border/80 pb-safe shadow-lg pointer-events-auto"
     >
-      <div className="flex items-center justify-around h-15 px-2 max-w-lg mx-auto">
+      <div className="flex items-center justify-around h-16 px-2 max-w-lg mx-auto">
         {NAV_TABS.map((tab) => {
           const isActive = tab.exact
             ? pathname === tab.href
@@ -94,7 +131,7 @@ export function MobileBottomNav() {
             >
               <div
                 className={cn(
-                  "p-1 rounded-lg transition-all",
+                  "p-1.5 rounded-xl transition-all",
                   isActive && "bg-secondary text-foreground shadow-xs"
                 )}
               >
@@ -122,7 +159,7 @@ export function MobileBottomNav() {
         >
           <div
             className={cn(
-              "p-1 rounded-lg transition-all",
+              "p-1.5 rounded-xl transition-all",
               mobileOpen && "bg-secondary text-foreground shadow-xs"
             )}
           >

@@ -47,12 +47,64 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const router = useRouter();
-  const [user, setUser] = useState(null);
-  const [firm, setFirm] = useState(null);
-  const [role, setRole] = useState(null);
-  const [permissions, setPermissions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Instant SWR state initialization from local cache to eliminate loading flashes
+  const [user, setUser] = useState(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const isLoggedOut = localStorage.getItem("firm_user_logged_out") === "true";
+      if (isLoggedOut) return null;
+      const cached = localStorage.getItem("firm_cached_session");
+      return cached ? JSON.parse(cached).user : null;
+    } catch { return null; }
+  });
+
+  const [firm, setFirm] = useState(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const isLoggedOut = localStorage.getItem("firm_user_logged_out") === "true";
+      if (isLoggedOut) return null;
+      const cached = localStorage.getItem("firm_cached_session");
+      return cached ? JSON.parse(cached).firm : null;
+    } catch { return null; }
+  });
+
+  const [role, setRole] = useState(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const isLoggedOut = localStorage.getItem("firm_user_logged_out") === "true";
+      if (isLoggedOut) return null;
+      const cached = localStorage.getItem("firm_cached_session");
+      return cached ? JSON.parse(cached).role : null;
+    } catch { return null; }
+  });
+
+  const [permissions, setPermissions] = useState(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const isLoggedOut = localStorage.getItem("firm_user_logged_out") === "true";
+      if (isLoggedOut) return [];
+      const cached = localStorage.getItem("firm_cached_session");
+      return cached ? (JSON.parse(cached).permissions || []) : [];
+    } catch { return []; }
+  });
+
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const isLoggedOut = localStorage.getItem("firm_user_logged_out") === "true";
+    const hasToken = !!localStorage.getItem("firm_auth_token");
+    return !isLoggedOut && hasToken;
+  });
+
+  const [loading, setLoading] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const isLoggedOut = localStorage.getItem("firm_user_logged_out") === "true";
+    const hasToken = !!localStorage.getItem("firm_auth_token");
+    const hasCached = !!localStorage.getItem("firm_cached_session");
+    // If we have both token and cached session, render immediately without blocking
+    if (hasToken && hasCached && !isLoggedOut) return false;
+    return true;
+  });
 
   /**
    * Dev-mode or mobile session login helper
@@ -69,10 +121,12 @@ export function AuthProvider({ children }) {
       setRole(session.role);
       setPermissions(session.permissions || []);
       setIsAuthenticated(true);
+      if (typeof window !== "undefined") {
+        try { localStorage.setItem("firm_cached_session", JSON.stringify(session)); } catch {}
+      }
     }
     return session;
   }, []);
-
 
   const restoreSession = useCallback(async () => {
     try {
@@ -83,6 +137,9 @@ export function AuthProvider({ children }) {
         setRole(session.role);
         setPermissions(session.permissions || []);
         setIsAuthenticated(true);
+        if (typeof window !== "undefined") {
+          try { localStorage.setItem("firm_cached_session", JSON.stringify(session)); } catch {}
+        }
         return true;
       }
     } catch {
@@ -229,6 +286,9 @@ export function AuthProvider({ children }) {
       setRole(role || null);
       setPermissions(permissions || []);
       setIsAuthenticated(true);
+      if (typeof window !== "undefined") {
+        try { localStorage.setItem("firm_cached_session", JSON.stringify(res.data)); } catch {}
+      }
       return res.data;
     }
     throw new Error(res?.message || "Authentication failed");
@@ -239,6 +299,7 @@ export function AuthProvider({ children }) {
       localStorage.setItem("firm_user_logged_out", "true");
       sessionStorage.setItem("firm_user_logged_out", "true");
       localStorage.removeItem("firm_auth_token");
+      localStorage.removeItem("firm_cached_session");
       localStorage.removeItem("token");
       try {
         const { App: CapacitorApp } = await import("@capacitor/app");

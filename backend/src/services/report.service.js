@@ -9,11 +9,17 @@ const reportService = {
   async getSalesReport(firmId, filters = {}) {
     const where = { firmId };
     if (filters.branchId) where.branchId = filters.branchId;
+    if (filters.startDate || filters.endDate) {
+      where.date = {};
+      if (filters.startDate) where.date.gte = new Date(filters.startDate);
+      if (filters.endDate) where.date.lte = new Date(filters.endDate);
+    }
 
     const sales = await prisma.sale.findMany({
       where,
       include: { items: true, customer: true },
       orderBy: { date: "desc" },
+      take: 1000,
     });
 
     const totalSales = sales.length;
@@ -26,16 +32,6 @@ const reportService = {
       statusCounts[s.status] = (statusCounts[s.status] || 0) + 1;
     });
 
-    const cleanSales = sales.map((sale) => ({
-      ...sale,
-      customerName: (sale.customerName && sale.customerName.startsWith("enc:rsa:"))
-        ? (sale.customer?.name || "Customer")
-        : sale.customerName,
-      description: (sale.description && sale.description.startsWith("enc:rsa:"))
-        ? ""
-        : sale.description,
-    }));
-
     return {
       summary: {
         totalSales,
@@ -44,18 +40,24 @@ const reportService = {
         totalDiscount,
       },
       statusCounts,
-      sales: cleanSales.slice(0, 50),
+      sales: sales.slice(0, 50),
     };
   },
 
   async getPurchaseReport(firmId, filters = {}) {
     const where = { firmId };
     if (filters.branchId) where.branchId = filters.branchId;
+    if (filters.startDate || filters.endDate) {
+      where.date = {};
+      if (filters.startDate) where.date.gte = new Date(filters.startDate);
+      if (filters.endDate) where.date.lte = new Date(filters.endDate);
+    }
 
     const purchases = await prisma.purchase.findMany({
       where,
       include: { items: true, supplier: true },
       orderBy: { date: "desc" },
+      take: 1000,
     });
 
     const totalPurchases = purchases.length;

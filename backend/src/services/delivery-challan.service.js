@@ -44,29 +44,47 @@ const deliveryChallanService = {
   },
 
   async create(data, firmId, createdById) {
-    const { items, ...challanData } = data;
+    const { items, id: _, firmId: __, customer, branch, createdAt, updatedAt, ...challanData } = data;
+
+    let generatedChallanNum = challanData.challanNumber?.trim();
+    if (!generatedChallanNum) {
+      const lastChallan = await prisma.deliveryChallan.findFirst({
+        where: { firmId, challanNumber: { startsWith: "CHL-" } },
+        orderBy: { createdAt: "desc" },
+        select: { challanNumber: true },
+      });
+      let nextSeq = 1;
+      if (lastChallan?.challanNumber) {
+        const match = lastChallan.challanNumber.match(/^CHL-(\d+)/);
+        if (match) {
+          nextSeq = parseInt(match[1], 10) + 1;
+        }
+      }
+      generatedChallanNum = `CHL-${String(nextSeq).padStart(4, "0")}`;
+    }
 
     return prisma.deliveryChallan.create({
       data: {
         ...challanData,
         firmId,
+        challanNumber: generatedChallanNum,
         status: challanData.status || "DELIVERED",
         createdBy: createdById,
         updatedBy: createdById,
       },
-      include: { customer: true },
+      include: { customer: true, branch: true },
     });
   },
 
   async update(id, data, firmId, updatedById) {
     await this.getById(id, firmId);
-    const { items, ...challanData } = data;
+    const { items, id: _, firmId: __, customer, branch, createdAt, updatedAt, ...challanData } = data;
     const updateData = { ...challanData, updatedBy: updatedById, updatedAt: new Date() };
 
     return prisma.deliveryChallan.update({
       where: { id },
       data: updateData,
-      include: { customer: true },
+      include: { customer: true, branch: true },
     });
   },
 

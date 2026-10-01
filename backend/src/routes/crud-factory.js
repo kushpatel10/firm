@@ -27,10 +27,11 @@ function createCrudRoutes(service, entityName, module, options = {}) {
   // GET /
   router.get("/", requirePermission(`${module}.View`), async (req, res, next) => {
     try {
-      const { page, pageSize, search, status, category, expenseType, saleType, branchId } = req.query;
+      const { page, pageSize, limit, search, status, category, expenseType, saleType, branchId } = req.query;
+      const parsedSize = parseInt(pageSize) || parseInt(limit) || 50;
       const result = await service.getAll(req.activeFirmId, {
         page: parseInt(page) || 1,
-        pageSize: parseInt(pageSize) || 20,
+        pageSize: Math.min(parsedSize, 500),
         search, status, category, expenseType, saleType, branchId,
       });
       paginated(

@@ -140,8 +140,7 @@ export function CalculatorVault() {
   const triggerUnlock = useCallback((pinToTry) => {
     triggerHaptic([30, 50, 30]);
     const pin = pinToTry || display;
-    const targetPasscode = passcode || "2007";
-    const success = unlock(pin) || unlock(targetPasscode);
+    const success = unlock(pin);
 
     if (success) {
       if (isAuthenticated && user) {
@@ -150,7 +149,7 @@ export function CalculatorVault() {
         router.replace("/login");
       }
     }
-  }, [display, passcode, unlock, isAuthenticated, user, router]);
+  }, [display, unlock, isAuthenticated, user, router]);
 
   // Handle Equals (=) — PRIMARY SECRET TRIGGER
   const handleEquals = useCallback(() => {
@@ -283,7 +282,7 @@ export function CalculatorVault() {
   };
 
   return (
-    <div className="h-[100dvh] w-full bg-black text-white flex flex-col justify-between p-4 sm:p-6 select-none font-sans overflow-hidden">
+    <div className="h-full w-full bg-black text-white flex flex-col justify-between p-4 sm:p-6 select-none font-sans overflow-hidden">
       {/* Top Bar: Minimalist Title & History Drawer Toggle */}
       <header className="flex items-center justify-between pt-safe pb-1 text-zinc-400 shrink-0">
         <div className="flex items-center gap-2">

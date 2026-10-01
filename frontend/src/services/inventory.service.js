@@ -6,8 +6,9 @@
 import { apiClient } from "@/lib/api-client";
 
 export const inventoryService = {
-  async getAll(firmId, branchId = null) {
-    const res = await apiClient.get(`/firms/${firmId}/inventory`, { branchId });
+  async getAll(firmId, params = {}) {
+    const query = typeof params === "string" ? { branchId: params, pageSize: 100 } : { pageSize: 100, ...params };
+    const res = await apiClient.get(`/firms/${firmId}/inventory`, query);
     return res?.data || [];
   },
 
@@ -23,6 +24,11 @@ export const inventoryService = {
 
   async update(firmId, id, input) {
     const res = await apiClient.put(`/firms/${firmId}/inventory/${id}`, input);
+    return res?.data;
+  },
+
+  async addStockEntry(firmId, itemId, data) {
+    const res = await apiClient.post(`/firms/${firmId}/inventory/${itemId}/stock`, data);
     return res?.data;
   },
 

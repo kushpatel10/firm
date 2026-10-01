@@ -6,8 +6,11 @@
 import { apiClient } from "@/lib/api-client";
 
 export const expenseService = {
-  async getAll(firmId, branchId = null) {
-    const res = await apiClient.get(`/firms/${firmId}/expenses`, { branchId });
+  async getAll(firmId, branchIdOrParams = null) {
+    const params = typeof branchIdOrParams === "object" && branchIdOrParams !== null
+      ? { limit: 100, ...branchIdOrParams }
+      : { limit: 100, ...(branchIdOrParams ? { branchId: branchIdOrParams } : {}) };
+    const res = await apiClient.get(`/firms/${firmId}/expenses`, params);
     return res?.data || [];
   },
 

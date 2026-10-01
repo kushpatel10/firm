@@ -9,11 +9,13 @@
  * @property {string} [branchId]
  * @property {string} name
  * @property {string} [sku]
- * @property {string} category
+ * @property {string} [category]
  * @property {string} unit
- * @property {number} currentStock
- * @property {number} minimumStock
- * @property {number} unitPrice
+ * @property {number} quantity
+ * @property {number} minStock
+ * @property {number} sellingPrice
+ * @property {number} purchasePrice
+ * @property {any} [sizes]
  * @property {string} [description]
  * @property {string} createdAt
  * @property {string} updatedAt

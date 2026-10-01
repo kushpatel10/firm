@@ -61,7 +61,21 @@ router.post(
 // GET /api/users/:id
 router.get("/:id", async (req, res, next) => {
   try {
-    const user = await userService.getById(req.params.id);
+    const targetUserId = req.params.id;
+    const isSelf = req.user?.id === targetUserId;
+    const isSuperAdmin = !!req.user?.isSuperAdmin;
+
+    const user = await userService.getById(targetUserId);
+
+    if (!isSuperAdmin && !isSelf) {
+      const callerFirmIds = (req.userAssignments || []).map((a) => a.firmId);
+      const targetFirmIds = (user.firmAssignments || []).map((a) => a.firmId);
+      const sharesFirm = callerFirmIds.some((fId) => targetFirmIds.includes(fId));
+      if (!sharesFirm) {
+        return res.status(403).json({ success: false, message: "Access denied to this user profile" });
+      }
+    }
+
     success(res, user);
   } catch (err) { next(err); }
 });

@@ -14,9 +14,7 @@ const crudRouter = createCrudRoutes(expenseService, "Expense", "Expense", { data
 
 const router = Router({ mergeParams: true });
 
-router.use(crudRouter);
-
-// GET /summary — Monthly expense summary
+// GET /summary — Monthly expense summary (must be before crudRouter to prevent /:id shadowing)
 router.get(
   "/summary",
   authenticate, requireFirm, requirePermission("Expense.View"),
@@ -30,5 +28,7 @@ router.get(
     } catch (err) { next(err); }
   }
 );
+
+router.use(crudRouter);
 
 module.exports = router;

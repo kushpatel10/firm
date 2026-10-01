@@ -6,7 +6,7 @@ const prisma = require("../config/database");
 const { NotFoundError } = require("../utils/errors");
 
 const inventoryService = {
-  async getAll(firmId, { page = 1, pageSize = 20, search, category, branchId } = {}) {
+  async getAll(firmId, { page = 1, pageSize = 50, search, category, branchId } = {}) {
     const where = { firmId };
     if (category) where.category = category;
     if (branchId) where.branchId = branchId;
@@ -43,7 +43,7 @@ const inventoryService = {
   },
 
   async create(data, firmId, createdById) {
-    const { id: _, branch, ...itemData } = data;
+    const { id: _, firmId: __, branch, createdAt, updatedAt, ...itemData } = data;
     let sizes = itemData.sizes;
     if (typeof sizes === "string") {
       try { sizes = JSON.parse(sizes); } catch { sizes = sizes.split(",").map(s => s.trim()).filter(Boolean); }
@@ -82,29 +82,30 @@ const inventoryService = {
     });
   },
 
-  /** Add a stock entry (IN or OUT) and update current stock quantity. */
+  /** Add a stock entry (IN or OUT) and update current stock quantity atomically. */
   async addStockEntry(itemId, { type, quantity, reference, notes }, firmId, createdById) {
     const item = await this.getById(itemId, firmId);
     const qty = parseInt(quantity) || 0;
+    if (qty <= 0) throw new Error("Stock quantity must be greater than 0");
 
-    const newQuantity = type === "IN"
-      ? item.quantity + qty
-      : item.quantity - qty;
-
-    if (newQuantity < 0) {
-      throw new Error("Insufficient stock");
+    if (type === "OUT" && item.quantity < qty) {
+      throw new Error(`Insufficient stock. Current stock is ${item.quantity}`);
     }
 
     const updatedItem = await prisma.inventoryItem.update({
       where: { id: itemId },
-      data: { quantity: newQuantity, updatedBy: createdById, updatedAt: new Date() },
+      data: {
+        quantity: type === "IN" ? { increment: qty } : { decrement: qty },
+        updatedBy: createdById,
+        updatedAt: new Date(),
+      },
     });
 
     return {
       itemId,
       type,
       quantity: qty,
-      newQuantity,
+      newQuantity: updatedItem.quantity,
       reference: reference || null,
       notes: notes || null,
       updatedAt: updatedItem.updatedAt,

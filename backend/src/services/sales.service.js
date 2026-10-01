@@ -6,14 +6,8 @@
 const prisma = require("../config/database");
 const { NotFoundError } = require("../utils/errors");
 
-function sanitizeEncryptedField(val, fallback = "") {
-  if (!val || typeof val !== "string") return val;
-  if (val.startsWith("enc:rsa:")) return fallback;
-  return val;
-}
-
 const salesService = {
-  async getAll(firmId, { page = 1, pageSize = 20, search, status, saleType, branchId }) {
+  async getAll(firmId, { page = 1, pageSize = 50, search, status, saleType, branchId } = {}) {
     const where = { firmId };
     if (status) where.status = status;
     if (saleType) where.saleType = saleType;
@@ -41,13 +35,7 @@ const salesService = {
       prisma.sale.count({ where }),
     ]);
 
-    const cleanSales = sales.map((sale) => ({
-      ...sale,
-      customerName: sanitizeEncryptedField(sale.customerName, sale.customer?.name || "Customer"),
-      description: sanitizeEncryptedField(sale.description, ""),
-    }));
-
-    return { sales: cleanSales, total, page, pageSize };
+    return { sales, total, page, pageSize };
   },
 
   async getById(id, firmId) {
@@ -62,11 +50,7 @@ const salesService = {
     });
     if (!sale) throw new NotFoundError("Sale");
 
-    return {
-      ...sale,
-      customerName: sanitizeEncryptedField(sale.customerName, sale.customer?.name || "Customer"),
-      description: sanitizeEncryptedField(sale.description, ""),
-    };
+    return sale;
   },
 
   async create(data, firmId, createdById) {
@@ -79,7 +63,7 @@ const salesService = {
 
     const tax = parseFloat(saleData.tax) || 0;
     const discount = parseFloat(saleData.discount) || 0;
-    const total = subtotal + tax - discount;
+    const total = Math.max(0, subtotal + tax - discount);
 
     const prefix = (saleData.saleType || "PAKU") === "KACHU" ? "KCH" : "INV";
     let generatedInvoiceNum = saleData.invoiceNumber;
@@ -123,6 +107,12 @@ const salesService = {
             unit: item.unit || "pcs",
             unitPrice: parseFloat(item.unitPrice) || 0,
             total: (parseInt(item.quantity) || 1) * (parseFloat(item.unitPrice) || 0),
+            dimensions: item.dimensions || null,
+            formula: item.formula || null,
+            calculatedArea: item.calculatedArea != null ? parseFloat(item.calculatedArea) : null,
+            rate: item.rate != null ? parseFloat(item.rate) : null,
+            subtype: item.subtype || null,
+            snapshot: item.snapshot || null,
           })),
         } : undefined,
       },
@@ -133,22 +123,27 @@ const salesService = {
   },
 
   async update(id, data, firmId, updatedById) {
-    await this.getById(id, firmId);
+    const existingSale = await this.getById(id, firmId);
 
     const { items, id: _, firmId: __, firm: ___, customer: ____, branch: _____, createdAt, updatedAt, ...saleData } = data;
     const updateData = { ...saleData, updatedBy: updatedById, updatedAt: new Date() };
 
-    if (saleData.customerName) {
+    if (saleData.customerName !== undefined) {
       updateData.customerName = saleData.customerName;
     }
     if (saleData.description !== undefined) {
       updateData.description = saleData.description;
     }
 
+    const tax = saleData.tax !== undefined ? (parseFloat(saleData.tax) || 0) : (existingSale.tax || 0);
+    const discount = saleData.discount !== undefined ? (parseFloat(saleData.discount) || 0) : (existingSale.discount || 0);
+
     if (items) {
       const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.quantity) || 1) * (parseFloat(item.unitPrice) || 0), 0);
       updateData.subtotal = subtotal;
-      updateData.total = subtotal + (parseFloat(saleData.tax) || 0) - (parseFloat(saleData.discount) || 0);
+      updateData.tax = tax;
+      updateData.discount = discount;
+      updateData.total = Math.max(0, subtotal + tax - discount);
 
       updateData.items = {
         create: items.map((item) => ({
@@ -159,8 +154,20 @@ const salesService = {
           unit: item.unit || "pcs",
           unitPrice: parseFloat(item.unitPrice) || 0,
           total: (parseInt(item.quantity) || 1) * (parseFloat(item.unitPrice) || 0),
+          dimensions: item.dimensions || null,
+          formula: item.formula || null,
+          calculatedArea: item.calculatedArea != null ? parseFloat(item.calculatedArea) : null,
+          rate: item.rate != null ? parseFloat(item.rate) : null,
+          subtype: item.subtype || null,
+          snapshot: item.snapshot || null,
         })),
       };
+    } else if (saleData.subtotal !== undefined || saleData.tax !== undefined || saleData.discount !== undefined) {
+      const subtotal = saleData.subtotal !== undefined ? (parseFloat(saleData.subtotal) || 0) : existingSale.subtotal;
+      updateData.subtotal = subtotal;
+      updateData.tax = tax;
+      updateData.discount = discount;
+      updateData.total = Math.max(0, subtotal + tax - discount);
     }
 
     // Atomic transaction ensures items are not lost if update fails

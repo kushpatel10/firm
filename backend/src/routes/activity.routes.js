@@ -6,6 +6,7 @@ const { Router } = require("express");
 const activityService = require("../services/activity.service");
 const { success, paginated } = require("../utils/response");
 const { authenticate, requireSuperAdmin } = require("../middleware/auth");
+const { requireFirm } = require("../middleware/tenant");
 
 const router = Router();
 
@@ -24,8 +25,8 @@ router.get("/", requireSuperAdmin, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// GET /api/activity/firm/:firmId — Firm activity
-router.get("/firm/:firmId", async (req, res, next) => {
+// GET /api/activity/firm/:firmId — Firm activity (requires firm membership or super admin)
+router.get("/firm/:firmId", requireFirm, async (req, res, next) => {
   try {
     const { page, pageSize, action } = req.query;
     const result = await activityService.getByFirmId(req.params.firmId, {

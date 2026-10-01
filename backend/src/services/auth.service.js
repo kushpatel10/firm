@@ -263,6 +263,25 @@ const authService = {
     if (!normalizedEmail) {
       throw new UnauthorizedError("Email address is required");
     }
+    if (!password || typeof password !== "string") {
+      throw new UnauthorizedError("Password is required");
+    }
+
+    // Verify configured password
+    const configuredPassword = process.env.ADMIN_PASSWORD || process.env.DEV_PASSWORD;
+    if (config.nodeEnv === "production") {
+      if (!configuredPassword) {
+        throw new UnauthorizedError("Password authentication is disabled in production. Please sign in with Google.");
+      }
+      if (password !== configuredPassword) {
+        throw new UnauthorizedError("Invalid email or password");
+      }
+    } else {
+      const devAllowedPassword = configuredPassword || "admin123";
+      if (password !== devAllowedPassword) {
+        throw new UnauthorizedError("Invalid email or password");
+      }
+    }
 
     const superAdminEmail = (config.superAdminEmail || "kvpatel.in004@gmail.com").toLowerCase();
     const isConfiguredSuperAdmin = normalizedEmail === superAdminEmail;
@@ -367,7 +386,7 @@ const authService = {
     const permissions =
       activeAssignment?.role?.permissions?.map(
         (rp) => `${rp.permission.module}.${rp.permission.action}`
-      ) || [
+      ) || (user.isSuperAdmin ? [
         "Sales.View", "Sales.Create", "Sales.Edit", "Sales.Delete",
         "Purchase.View", "Purchase.Create", "Purchase.Edit", "Purchase.Delete",
         "Expense.View", "Expense.Create", "Expense.Edit", "Expense.Delete",
@@ -376,7 +395,7 @@ const authService = {
         "Suppliers.View", "Suppliers.Create", "Suppliers.Edit", "Suppliers.Delete",
         "DeliveryChallans.View", "DeliveryChallans.Create", "DeliveryChallans.Edit", "DeliveryChallans.Delete",
         "Reports.View", "Settings.Manage", "Users.Manage",
-      ];
+      ] : []);
 
     const token = jwt.sign(
       {

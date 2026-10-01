@@ -55,8 +55,22 @@ const purchaseService = {
     const discount = parseFloat(purchaseData.discount) || 0;
     const total = Math.max(0, subtotal + tax - discount);
 
-    const count = await prisma.purchase.count({ where: { firmId } });
-    const generatedInvoiceNum = purchaseData.invoiceNumber?.trim() || `PUR-${String(count + 1).padStart(4, "0")}`;
+    let generatedInvoiceNum = purchaseData.invoiceNumber?.trim();
+    if (!generatedInvoiceNum) {
+      const lastPurchase = await prisma.purchase.findFirst({
+        where: { firmId, invoiceNumber: { startsWith: "PUR-" } },
+        orderBy: { createdAt: "desc" },
+        select: { invoiceNumber: true },
+      });
+      let nextSeq = 1;
+      if (lastPurchase?.invoiceNumber) {
+        const match = lastPurchase.invoiceNumber.match(/^PUR-(\d+)/);
+        if (match) {
+          nextSeq = parseInt(match[1], 10) + 1;
+        }
+      }
+      generatedInvoiceNum = `PUR-${String(nextSeq).padStart(4, "0")}`;
+    }
 
     return prisma.purchase.create({
       data: {
@@ -86,11 +100,14 @@ const purchaseService = {
   },
 
   async update(id, data, firmId, updatedById) {
-    await this.getById(id, firmId);
+    const existing = await this.getById(id, firmId);
     const { items, id: _, firmId: __, firm: ___, supplier: ____, branch: _____, createdAt, updatedAt, ...purchaseData } = data;
     const updateData = { ...purchaseData, updatedBy: updatedById, updatedAt: new Date() };
 
-    let subtotal = parseFloat(purchaseData.subtotal);
+    const tax = purchaseData.tax !== undefined ? (parseFloat(purchaseData.tax) || 0) : (existing.tax || 0);
+    const discount = purchaseData.discount !== undefined ? (parseFloat(purchaseData.discount) || 0) : (existing.discount || 0);
+
+    let subtotal;
     if (items && items.length > 0) {
       subtotal = items.reduce((sum, item) => sum + (parseFloat(item.quantity) || 1) * (parseFloat(item.unitPrice) || 0), 0);
       updateData.items = {
@@ -103,12 +120,14 @@ const purchaseService = {
           total: (parseInt(item.quantity) || 1) * (parseFloat(item.unitPrice) || 0),
         })),
       };
-    } else if (isNaN(subtotal)) {
-      subtotal = parseFloat(purchaseData.total) || 0;
+    } else if (purchaseData.subtotal !== undefined) {
+      subtotal = parseFloat(purchaseData.subtotal) || 0;
+    } else if (purchaseData.total !== undefined) {
+      subtotal = Math.max(0, (parseFloat(purchaseData.total) || 0) - tax + discount);
+    } else {
+      subtotal = existing.subtotal;
     }
 
-    const tax = parseFloat(purchaseData.tax) || 0;
-    const discount = parseFloat(purchaseData.discount) || 0;
     updateData.subtotal = subtotal;
     updateData.tax = tax;
     updateData.discount = discount;

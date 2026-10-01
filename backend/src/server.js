@@ -20,6 +20,7 @@ const firmRoutes = require("./routes/firm.routes");
 const userRoutes = require("./routes/user.routes");
 const roleRoutes = require("./routes/role.routes");
 const activityRoutes = require("./routes/activity.routes");
+const categoryRoutes = require("./routes/category.routes");
 const salesRoutes = require("./routes/sales.routes");
 const purchaseRoutes = require("./routes/purchase.routes");
 const expenseRoutes = require("./routes/expense.routes");
@@ -150,10 +151,8 @@ app.use("/api/auth", authRoutes);
 // Dashboard routes
 app.use("/api", dashboardRoutes);
 
-const vaultRoutes = require("./routes/vault.routes");
-
 // Tenant-scoped business routes (mounted before general /api/firms admin router)
-app.use("/api/firms/:firmId/vault", vaultRoutes);
+app.use("/api/firms/:firmId/categories", categoryRoutes);
 app.use("/api/firms/:firmId/sales", salesRoutes);
 app.use("/api/firms/:firmId/purchases", purchaseRoutes);
 app.use("/api/firms/:firmId/expenses", expenseRoutes);
@@ -182,6 +181,8 @@ app.use((req, res) => {
 // --- Error Handler ---
 app.use(errorHandler);
 
+const prisma = require("./config/database");
+
 // --- Start Server ---
 const server = app.listen(config.port, "0.0.0.0", () => {
   console.log(`\n🚀 Firm API running on http://0.0.0.0:${config.port}`);
@@ -190,7 +191,12 @@ const server = app.listen(config.port, "0.0.0.0", () => {
   if (config.publicUrl && config.publicUrl !== config.frontendUrl) {
     console.log(`   Public URL: ${config.publicUrl}`);
   }
-  console.log(`   Health: http://0.0.0.0:${config.port}/api/health\n`);
+  console.log(`   Health: http://0.0.0.0:${config.port}/api/health`);
+
+  // Pre-warm database connection pool to eliminate cold-start query penalty
+  prisma.$connect()
+    .then(() => console.log("   Database: Connection pool pre-warmed & ready\n"))
+    .catch((err) => console.warn("   Database warning:", err.message));
 });
 
 server.on("error", (err) => {

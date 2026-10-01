@@ -3,20 +3,13 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
-import { useStealth } from "@/contexts/stealth-context";
 
 export default function HomePage() {
   const router = useRouter();
   const { isAuthenticated, user, loading } = useAuth();
-  const { isAndroidNative, isUnlocked } = useStealth();
 
   useEffect(() => {
     if (loading) return;
-
-    // On Android native app, wait until the user unlocks the calculator layer
-    if (isAndroidNative && !isUnlocked) {
-      return;
-    }
 
     if (isAuthenticated && user) {
       if (user.isSuperAdmin) {
@@ -27,7 +20,7 @@ export default function HomePage() {
     } else {
       router.replace("/login");
     }
-  }, [isAuthenticated, user, loading, router, isAndroidNative, isUnlocked]);
+  }, [isAuthenticated, user, loading, router]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">

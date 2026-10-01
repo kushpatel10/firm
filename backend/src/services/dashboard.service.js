@@ -7,7 +7,7 @@ const prisma = require("../config/database");
 
 const dashboardService = {
   async getFirmSummary(firmId) {
-    const [sales, purchases, expenses, inventoryCount, recentActivity] = await Promise.all([
+    const [sales, purchases, expenses, inventoryCount, recentActivity, recentSales] = await Promise.all([
       prisma.sale.aggregate({
         where: { firmId },
         _sum: { total: true },
@@ -32,21 +32,13 @@ const dashboardService = {
         orderBy: { createdAt: "desc" },
         include: { user: { select: { name: true, email: true } } },
       }),
+      prisma.sale.findMany({
+        where: { firmId },
+        take: 6,
+        orderBy: { date: "desc" },
+        select: { id: true, total: true, date: true, status: true, customerName: true },
+      }),
     ]);
-
-    const recentSales = await prisma.sale.findMany({
-      where: { firmId },
-      take: 6,
-      orderBy: { date: "desc" },
-      select: { id: true, total: true, date: true, status: true, customerName: true },
-    });
-
-    const cleanRecentSales = recentSales.map((sale) => ({
-      ...sale,
-      customerName: (sale.customerName && sale.customerName.startsWith("enc:rsa:"))
-        ? "Customer"
-        : sale.customerName,
-    }));
 
     return {
       stats: {
@@ -58,7 +50,7 @@ const dashboardService = {
         expensesCount: expenses._count.id || 0,
         totalInventory: inventoryCount || 0,
       },
-      recentSales: cleanRecentSales,
+      recentSales,
       recentActivity,
     };
   },

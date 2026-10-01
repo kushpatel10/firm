@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -82,7 +83,8 @@ export default function ItemsPage() {
     setLoading(true);
     try {
       const data = await inventoryService.getAll(firmId);
-      setItems(data || []);
+      const itemsList = Array.isArray(data) ? data : (data?.items || []);
+      setItems(itemsList);
     } catch (err) {
       toast.error(err.message || "Failed to load items");
     } finally {
@@ -438,25 +440,33 @@ export default function ItemsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Items & Products"
-        description="Add items with size options and pricing to directly use in Sale Vouchers and Inventory."
+        title="Item Master & Catalog"
+        description="Product definitions, SKU codes, categories, size variants, and base pricing. For live stock tracking & adjustments, go to Inventory."
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
-          { label: "Items" },
+          { label: "Items Catalog" },
         ]}
         actions={
-          <PermissionGate permission="Inventory.Create">
-            <Button
-              className="gap-2 shadow-sm font-medium"
-              onClick={() => {
-                resetForm();
-                setAddDialogOpen(true);
-              }}
-            >
-              <Plus className="h-4 w-4" />
-              Add Item
-            </Button>
-          </PermissionGate>
+          <div className="flex items-center gap-2">
+            <Link href="/dashboard/inventory">
+              <Button variant="outline" className="gap-2 text-xs h-9">
+                <Package className="h-4 w-4 text-primary" />
+                Stock Tracking
+              </Button>
+            </Link>
+            <PermissionGate permission="Inventory.Create">
+              <Button
+                className="gap-2 shadow-sm font-medium text-xs h-9"
+                onClick={() => {
+                  resetForm();
+                  setAddDialogOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                Add Item
+              </Button>
+            </PermissionGate>
+          </div>
         }
       />
 

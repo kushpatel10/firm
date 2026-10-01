@@ -7,7 +7,8 @@ import { apiClient } from "@/lib/api-client";
 
 export const customerService = {
   async getAll(firmId, params = {}) {
-    const res = await apiClient.get(`/firms/${firmId}/customers`, params);
+    const query = { limit: 100, ...params };
+    const res = await apiClient.get(`/firms/${firmId}/customers`, query);
     return res?.data || [];
   },
 

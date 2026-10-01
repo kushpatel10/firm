@@ -68,6 +68,7 @@ model Firm {
   expenses        Expense[]
   inventoryItems  InventoryItem[]
   deliveryChallans DeliveryChallan[]
+  categories       Category[]
 
   @@map("firms")
 }
@@ -307,16 +308,24 @@ model Sale {
 }
 
 model SaleItem {
-  id        String  @id @default(cuid())
-  saleId    String
-  sale      Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
-  name      String
-  category  String?
-  size      String?
-  quantity  Int     @default(1)
-  unit      String  @default("pcs")
-  unitPrice Float   @default(0)
-  total     Float   @default(0)
+  id              String  @id @default(cuid())
+  saleId          String
+  sale            Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  name            String
+  category        String?
+  size            String?
+  quantity        Int     @default(1)
+  unit            String  @default("pcs")
+  unitPrice       Float   @default(0)
+  total           Float   @default(0)
+
+  // Configurable / Historical Snapshot fields
+  dimensions      Json?
+  formula         String?
+  calculatedArea  Float?
+  rate            Float?
+  subtype         String?
+  snapshot        Json?
 
   @@index([saleId])
   @@map("sale_items")
@@ -438,4 +447,108 @@ model DeliveryChallan {
   @@index([firmId, date(sort: Desc)])
   @@index([firmId, status])
   @@map("delivery_challans")
+}
+
+// ──────────────────────────────────────────────
+// Configurable Product Catalog Entities
+// ──────────────────────────────────────────────
+
+model Category {
+  id                String                 @id @default(cuid())
+  firmId            String
+  firm              Firm                   @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  name              String
+  icon              String?                @default("🚪")
+  description       String?
+  hasSubtypes       Boolean                @default(true)
+  formula           String                 @default("(LENGTH * WIDTH) / 144")
+  calculationLabel  String                 @default("Square Feet")
+  rateLabel         String                 @default("Rate per sq.ft")
+  unit              String                 @default("sq.ft")
+  sortOrder         Int                    @default(0)
+  isActive          Boolean                @default(true)
+
+  subtypes          CategorySubtype[]
+  dimensions        DimensionDefinition[]
+  sizePresets       SizePreset[]
+  pricingRules      PricingRule[]
+
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  createdBy         String?
+  updatedBy         String?
+
+  @@index([firmId, name])
+  @@map("categories")
+}
+
+model CategorySubtype {
+  id          String   @id @default(cuid())
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  defaultRate Float?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([categoryId, name])
+  @@map("category_subtypes")
+}
+
+model DimensionDefinition {
+  id           String   @id @default(cuid())
+  categoryId   String
+  category     Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  key          String   // e.g. "length", "width", "quantity"
+  label        String   // e.g. "Length", "Width", "Quantity"
+  unit         String?  // e.g. "inch", "mm", "piece"
+  type         String   @default("NUMBER")
+  required     Boolean  @default(true)
+  defaultValue Float?
+  placeholder  String?
+  sortOrder    Int      @default(0)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([categoryId])
+  @@map("dimension_definitions")
+}
+
+model SizePreset {
+  id           String   @id @default(cuid())
+  categoryId   String
+  category     Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name         String   // e.g. "30 mm", "35 mm"
+  standardRate Float?
+  isCustom     Boolean  @default(false)
+  sortOrder    Int      @default(0)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([categoryId])
+  @@map("size_presets")
+}
+
+model PricingRule {
+  id                 String   @id @default(cuid())
+  categoryId         String
+  category           Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name               String   @default("Default Pricing")
+  formula            String   @default("(LENGTH * WIDTH) / 144")
+  formulaExplanation String?  @default("Square Feet = (Length * Width) / 144")
+  rounding           String   @default("ROUND_HALF_UP")
+  decimalPlaces      Int      @default(2)
+  isActive           Boolean  @default(true)
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([categoryId])
+  @@map("pricing_rules")
 }

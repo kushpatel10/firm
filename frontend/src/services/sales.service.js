@@ -7,8 +7,11 @@ import { apiClient } from "@/lib/api-client";
 
 export const salesService = {
   /** @returns {Promise<import('@/types/sales.types').Sale[]>} */
-  async getAll(firmId, branchId = null) {
-    const res = await apiClient.get(`/firms/${firmId}/sales`, { branchId });
+  async getAll(firmId, branchIdOrParams = null) {
+    const params = typeof branchIdOrParams === "object" && branchIdOrParams !== null
+      ? { limit: 100, ...branchIdOrParams }
+      : { limit: 100, ...(branchIdOrParams ? { branchId: branchIdOrParams } : {}) };
+    const res = await apiClient.get(`/firms/${firmId}/sales`, params);
     return res?.data || [];
   },
 

@@ -87,11 +87,12 @@ const firmService = {
    */
   async update(id, data, updatedById) {
     await this.getById(id); // Throws if not found
+    const { id: _, branches, userAssignments, _count, createdAt, updatedAt, masterBusinessKey, ...cleanData } = data;
 
     return prisma.firm.update({
       where: { id },
       data: {
-        ...data,
+        ...cleanData,
         updatedBy: updatedById,
         updatedAt: new Date(),
       },

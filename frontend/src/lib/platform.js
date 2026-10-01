@@ -47,12 +47,8 @@ export function isAndroidNativeApp() {
     }
   } catch {}
 
-  // 3. Build-time Capacitor flag combined with Capacitor native bridge
-  if (
-    process.env.NEXT_PUBLIC_IS_CAPACITOR_BUILD === "true" &&
-    typeof window.Capacitor !== "undefined" &&
-    window.Capacitor?.isNativePlatform?.()
-  ) {
+  // 3. Build-time Capacitor flag (strictly true only when building Android Capacitor APK via npm run cap:build)
+  if (process.env.NEXT_PUBLIC_IS_CAPACITOR_BUILD === "true") {
     return true;
   }
 
