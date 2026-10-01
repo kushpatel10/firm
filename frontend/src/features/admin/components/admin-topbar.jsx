@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/contexts/auth-context";
 import { useSidebar } from "@/contexts/sidebar-context";
+import { useStealth } from "@/contexts/stealth-context";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,13 +13,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Moon, Sun, LogOut, User, Building2, Menu } from "lucide-react";
+import { Moon, Sun, LogOut, User, Building2, Menu, Lock } from "lucide-react";
 import { useTheme } from "next-themes";
 import { getInitials } from "@/lib/utils";
 import Link from "next/link";
 
 export function AdminTopbar() {
   const { user, logout } = useAuth();
+  const { lock, isAndroidNative } = useStealth();
   const { theme, setTheme } = useTheme();
   const { toggleMobile } = useSidebar();
 
@@ -60,6 +62,20 @@ export function AdminTopbar() {
               <span className="hidden sm:inline">Firm Dashboard</span>
             </Link>
           </Button>
+
+          {/* Stealth Panic Lock — Only on native Android */}
+          {isAndroidNative && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-muted-foreground hover:text-amber-500 rounded-xl cursor-pointer"
+              title="Lock to Calculator Decoy"
+              aria-label="Lock to Calculator"
+              onClick={lock}
+            >
+              <Lock className="h-4.5 w-4.5" />
+            </Button>
+          )}
 
           {/* Theme toggle */}
           <Button

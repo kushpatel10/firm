@@ -73,6 +73,7 @@ export function AuthProvider({ children }) {
     return session;
   }, []);
 
+
   const restoreSession = useCallback(async () => {
     try {
       const session = await authService.validateSession();

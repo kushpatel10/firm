@@ -57,14 +57,14 @@ function NavContent({ collapsed, onNavigate }) {
               href={item.href}
               onClick={onNavigate}
               className={cn(
-                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-medium transition-all duration-150 min-h-[40px]",
+                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-all duration-150 min-h-[44px]",
                 isActive
                   ? "bg-secondary text-foreground font-semibold shadow-xs border border-border/70"
                   : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
               )}
             >
               <item.icon className={cn(
-                "h-[18px] w-[18px] shrink-0 transition-colors",
+                "h-[19px] w-[19px] shrink-0 transition-colors",
                 isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
               )} />
               {!collapsed && <span className="truncate">{item.label}</span>}
@@ -76,9 +76,9 @@ function NavContent({ collapsed, onNavigate }) {
 
         <button
           onClick={logout}
-          className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-medium text-muted-foreground hover:bg-secondary/60 hover:text-destructive transition-all duration-150 w-full cursor-pointer min-h-[40px]"
+          className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium text-muted-foreground hover:bg-secondary/60 hover:text-destructive transition-all duration-150 w-full cursor-pointer min-h-[44px]"
         >
-          <LogOut className="h-[18px] w-[18px] shrink-0 text-muted-foreground group-hover:text-destructive transition-colors" />
+          <LogOut className="h-[19px] w-[19px] shrink-0 text-muted-foreground group-hover:text-destructive transition-colors" />
           {!collapsed && <span>Sign out</span>}
         </button>
       </nav>

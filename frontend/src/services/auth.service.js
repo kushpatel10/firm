@@ -16,6 +16,7 @@ export const authService = {
     return getGoogleOAuthURL();
   },
 
+
   /**
    * Handle the OAuth callback — send auth code to backend
    * @param {string} code - Google authorization code

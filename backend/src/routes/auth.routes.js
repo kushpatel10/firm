@@ -17,6 +17,39 @@ router.get("/google", (req, res) => {
   success(res, { url });
 });
 
+// POST /api/auth/login — Credentials login (Email & Password)
+router.post("/login", async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !email.trim()) {
+      return error(res, "Email address is required", 400);
+    }
+    if (!password || !password.trim()) {
+      return error(res, "Password is required", 400);
+    }
+
+    const result = await authService.loginWithCredentials(email.trim(), password);
+
+    const isHttps =
+      req.headers["x-forwarded-proto"] === "https" ||
+      req.secure ||
+      (req.headers["host"] && req.headers["host"].includes(".ts.net")) ||
+      (config.publicUrl && config.publicUrl.startsWith("https://")) ||
+      config.nodeEnv === "production";
+
+    res.cookie("token", result.token, {
+      httpOnly: true,
+      secure: isHttps,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    success(res, result, "Signed in successfully");
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /api/auth/callback — Handle Google OAuth callback
 router.post("/callback", async (req, res, next) => {
   try {

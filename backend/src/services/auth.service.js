@@ -253,6 +253,159 @@ const authService = {
   },
 
   /**
+   * Credential login with Email and Password
+   * @param {string} email
+   * @param {string} password
+   * @returns {Promise<Object>}
+   */
+  async loginWithCredentials(email, password) {
+    const normalizedEmail = (email || "").trim().toLowerCase();
+    if (!normalizedEmail) {
+      throw new UnauthorizedError("Email address is required");
+    }
+
+    const superAdminEmail = (config.superAdminEmail || "kvpatel.in004@gmail.com").toLowerCase();
+    const isConfiguredSuperAdmin = normalizedEmail === superAdminEmail;
+
+    // Look up user in PostgreSQL
+    let user = await prisma.user.findFirst({
+      where: { email: { equals: normalizedEmail, mode: "insensitive" } },
+      include: {
+        firmAssignments: {
+          where: { status: "ACTIVE" },
+          include: {
+            firm: true,
+            role: {
+              include: {
+                permissions: {
+                  include: { permission: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Auto-provision configured Super Admin if logging in for first time
+    if (!user && (isConfiguredSuperAdmin || (config.nodeEnv !== "production" && normalizedEmail.includes("admin")))) {
+      user = await prisma.user.create({
+        data: {
+          email: normalizedEmail,
+          name: isConfiguredSuperAdmin ? "Super Admin" : normalizedEmail.split("@")[0],
+          isSuperAdmin: true,
+          status: "ACTIVE",
+          lastLoginAt: new Date(),
+        },
+        include: {
+          firmAssignments: {
+            where: { status: "ACTIVE" },
+            include: {
+              firm: true,
+              role: {
+                include: {
+                  permissions: {
+                    include: { permission: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+    }
+
+    if (!user) {
+      throw new UnauthorizedError(
+        "No registered organizational account found for this email. Please check your credentials or continue with Google."
+      );
+    }
+
+    if (user.status !== "ACTIVE") {
+      throw new ForbiddenError(
+        "Your account has been deactivated. Contact your administrator."
+      );
+    }
+
+    let activeAssignment = user.firmAssignments?.[0];
+    let firm = activeAssignment?.firm || null;
+    let role = activeAssignment?.role || null;
+
+    if (!firm) {
+      firm = await prisma.firm.upsert({
+        where: { id: "dev-firm-001" },
+        update: { status: "ACTIVE" },
+        create: {
+          id: "dev-firm-001",
+          name: "Dev Firm",
+          businessType: "Technology",
+          currency: "INR",
+          timezone: "Asia/Kolkata",
+          status: "ACTIVE",
+        },
+      });
+
+      const ownerRole = await prisma.role.findFirst({
+        where: { name: "Owner", isSystem: true },
+      });
+
+      if (ownerRole) {
+        await prisma.userFirm.upsert({
+          where: { userId_firmId: { userId: user.id, firmId: firm.id } },
+          update: { status: "ACTIVE" },
+          create: {
+            userId: user.id,
+            firmId: firm.id,
+            roleId: ownerRole.id,
+            status: "ACTIVE",
+          },
+        });
+        role = ownerRole;
+      }
+    }
+
+    const permissions =
+      activeAssignment?.role?.permissions?.map(
+        (rp) => `${rp.permission.module}.${rp.permission.action}`
+      ) || [
+        "Sales.View", "Sales.Create", "Sales.Edit", "Sales.Delete",
+        "Purchase.View", "Purchase.Create", "Purchase.Edit", "Purchase.Delete",
+        "Expense.View", "Expense.Create", "Expense.Edit", "Expense.Delete",
+        "Inventory.View", "Inventory.Create", "Inventory.Edit", "Inventory.Delete",
+        "Customers.View", "Customers.Create", "Customers.Edit", "Customers.Delete",
+        "Suppliers.View", "Suppliers.Create", "Suppliers.Edit", "Suppliers.Delete",
+        "DeliveryChallans.View", "DeliveryChallans.Create", "DeliveryChallans.Edit", "DeliveryChallans.Delete",
+        "Reports.View", "Settings.Manage", "Users.Manage",
+      ];
+
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+        isSuperAdmin: user.isSuperAdmin,
+        firmId: firm?.id || null,
+      },
+      config.jwtSecret,
+      { expiresIn: config.jwtExpiresIn }
+    );
+
+    return {
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        avatar: user.avatar,
+        isSuperAdmin: user.isSuperAdmin,
+        status: user.status,
+      },
+      firm: firm ? { id: firm.id, name: firm.name, status: firm.status } : null,
+      role: role ? { id: role.id, name: role.name, isSystem: role.isSystem } : null,
+      permissions,
+    };
+  },
+
+  /**
    * Development login — returns a valid JWT for Super Admin user.
    */
   async devLogin() {

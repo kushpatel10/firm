@@ -50,16 +50,16 @@ export default function RootLayout({ children }) {
       >
         <SafeAreaProvider>
           <ThemeProvider>
-            <StealthProvider>
-              <StealthDecoyGuard>
-                <AuthProvider>
+            <AuthProvider>
+              <StealthProvider>
+                <StealthDecoyGuard>
                   <TooltipProvider>
                     {children}
                     <ToastProvider />
                   </TooltipProvider>
-                </AuthProvider>
-              </StealthDecoyGuard>
-            </StealthProvider>
+                </StealthDecoyGuard>
+              </StealthProvider>
+            </AuthProvider>
           </ThemeProvider>
         </SafeAreaProvider>
       </body>
