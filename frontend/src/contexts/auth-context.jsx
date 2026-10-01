@@ -148,6 +148,12 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     async function initAuth() {
       try {
+        if (typeof window !== "undefined" && window.location.pathname.startsWith("/callback")) {
+          // On callback page, we are in the middle of exchanging a new OAuth code. Skip validating old token.
+          setLoading(false);
+          return;
+        }
+
         const isLoggedOut =
           typeof window !== "undefined" &&
           (localStorage.getItem("firm_user_logged_out") === "true" ||
@@ -212,6 +218,10 @@ export function AuthProvider({ children }) {
     }
     const res = await authService.handleCallback(code);
     if (res?.success && res?.data) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("firm_user_logged_out");
+        sessionStorage.removeItem("firm_user_logged_out");
+      }
       const { user, firm, role, permissions } = res.data;
       setUser(user || null);
       setFirm(firm || null);

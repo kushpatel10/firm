@@ -238,8 +238,10 @@ async function request(endpoint, options = {}) {
   if (response.status === 401) {
     clearToken();
     if (typeof window !== "undefined") {
-      localStorage.setItem("firm_user_logged_out", "true");
-      sessionStorage.setItem("firm_user_logged_out", "true");
+      if (!endpoint.startsWith("/auth/")) {
+        localStorage.setItem("firm_user_logged_out", "true");
+        sessionStorage.setItem("firm_user_logged_out", "true");
+      }
       const currentPath = window.location.pathname;
       if (
         !endpoint.startsWith("/auth/") &&

@@ -5,8 +5,8 @@
 const { AppError } = require("../utils/errors");
 
 function errorHandler(err, req, res, next) {
-  // Log error in development
-  if (process.env.NODE_ENV !== "production") {
+  // Log error in development (skip expected 401 unauthorized errors)
+  if (process.env.NODE_ENV !== "production" && err.statusCode !== 401 && err.name !== "JsonWebTokenError" && err.name !== "TokenExpiredError") {
     console.error("Error:", err);
   }
 
