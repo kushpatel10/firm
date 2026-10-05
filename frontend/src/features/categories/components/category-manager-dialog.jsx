@@ -27,6 +27,7 @@ import {
   RefreshCw,
   FolderPlus,
 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { categoryService } from "@/services/category.service";
 import { FormulaEvaluator } from "@/features/sale-voucher/engine/formula-evaluator";
@@ -390,7 +391,7 @@ export function CategoryManagerDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl bg-card border-border/80 shadow-2xl">
+      <DialogContent className="w-[96vw] max-w-3xl max-h-[92vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl bg-card border-border/80 shadow-2xl">
         {/* Header */}
         <DialogHeader className="p-4 sm:p-6 pb-3 border-b border-border/60 bg-muted/20 shrink-0">
           <div className="flex items-center justify-between gap-3">
@@ -563,55 +564,94 @@ export function CategoryManagerDialog({
             /* --- CREATE CATEGORY & FORMULA BUILDER --- */
             <form onSubmit={handleCreateCategory} className="space-y-6">
               {/* Basic Information */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                   <span className="h-5 w-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs">1</span>
                   Basic Details
                 </h3>
 
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                  {/* Icon Selector */}
-                  <div className="sm:col-span-3 space-y-1.5">
-                    <Label className="text-xs font-semibold">Icon</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={icon}
-                        onChange={(e) => setIcon(e.target.value)}
-                        className="text-center text-2xl h-11 w-16 shrink-0"
-                        maxLength={4}
-                      />
-                      <div className="flex flex-wrap gap-1 max-w-[140px]">
-                        {QUICK_ICONS.slice(0, 6).map((ic) => (
+                <div className="space-y-3.5">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3.5">
+                    {/* Icon Selector Button with Popover */}
+                    <div className="space-y-1.5 shrink-0">
+                      <Label className="text-xs font-semibold">Icon</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
                           <button
-                            key={ic}
                             type="button"
-                            onClick={() => setIcon(ic)}
-                            className="h-6 w-6 text-sm hover:scale-110 active:scale-95 transition-all"
+                            className="h-11 w-16 sm:w-14 rounded-xl border border-input bg-background hover:bg-muted/60 flex items-center justify-center text-2xl shadow-xs transition-all cursor-pointer active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            title="Click to select icon"
                           >
-                            {ic}
+                            {icon || "📦"}
                           </button>
-                        ))}
-                      </div>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-72 p-3 bg-card border-border/80 shadow-2xl rounded-2xl">
+                          <p className="text-xs font-bold text-foreground mb-2">Choose Category Icon</p>
+                          <div className="grid grid-cols-7 gap-1.5">
+                            {QUICK_ICONS.map((ic) => (
+                              <button
+                                key={ic}
+                                type="button"
+                                onClick={() => setIcon(ic)}
+                                className={`h-8 w-8 rounded-lg text-lg flex items-center justify-center hover:bg-muted transition-all cursor-pointer ${
+                                  icon === ic ? "bg-primary/20 border border-primary/50 scale-110 font-bold" : ""
+                                }`}
+                              >
+                                {ic}
+                              </button>
+                            ))}
+                          </div>
+                          <div className="mt-3 pt-2.5 border-t border-border/50 flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Custom:</span>
+                            <Input
+                              value={icon}
+                              onChange={(e) => setIcon(e.target.value)}
+                              placeholder="Emoji"
+                              maxLength={4}
+                              className="h-8 w-16 text-center text-base"
+                            />
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    {/* Category Name */}
+                    <div className="flex-1 space-y-1.5 min-w-0">
+                      <Label htmlFor="cat_name" className="text-xs font-semibold">
+                        Category Name <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="cat_name"
+                        placeholder={placeholders.categories?.name || "e.g. Plywood & Boards, Granite, Steel Rods"}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                        className="h-11 font-medium text-sm"
+                      />
                     </div>
                   </div>
 
-                  {/* Category Name */}
-                  <div className="sm:col-span-9 space-y-1.5">
-                    <Label htmlFor="cat_name" className="text-xs font-semibold">
-                      Category Name <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="cat_name"
-                      placeholder={placeholders.categories?.name || "e.g. Plywood & Boards"}
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                      className="h-11 font-medium"
-                    />
+                  {/* Clean Horizontal Quick Suggestions with proper spacing */}
+                  <div className="flex items-center gap-2 flex-wrap pt-0.5">
+                    <span className="text-[11px] text-muted-foreground mr-0.5 shrink-0 font-medium">Quick pick:</span>
+                    {QUICK_ICONS.slice(0, 10).map((ic) => (
+                      <button
+                        key={ic}
+                        type="button"
+                        onClick={() => setIcon(ic)}
+                        className={`h-7 w-7 rounded-lg text-sm flex items-center justify-center border transition-all cursor-pointer ${
+                          icon === ic
+                            ? "bg-primary/20 border-primary text-primary shadow-xs scale-105"
+                            : "bg-muted/40 border-border/60 hover:bg-muted text-foreground"
+                        }`}
+                      >
+                        {ic}
+                      </button>
+                    ))}
                   </div>
 
                   {/* Description */}
-                  <div className="sm:col-span-12 space-y-1.5">
+                  <div className="space-y-1.5 pt-0.5">
                     <Label htmlFor="cat_desc" className="text-xs font-semibold">
                       Description (Optional)
                     </Label>

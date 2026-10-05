@@ -60,14 +60,10 @@ export function FirmTopbar() {
               <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-card" />
             </div>
 
-            <div className="min-w-0 flex flex-col">
-              <p className="text-sm font-bold tracking-tight text-foreground truncate max-w-[140px] sm:max-w-xs">
+            <div className="min-w-0 flex flex-col justify-center">
+              <p className="text-sm font-bold tracking-tight text-foreground truncate max-w-[160px] sm:max-w-xs leading-none">
                 {firmName}
               </p>
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="truncate">Live Cloud</span>
-              </div>
             </div>
           </div>
         </div>

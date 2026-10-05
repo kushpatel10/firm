@@ -122,7 +122,7 @@ export function FirmSidebar() {
 
             {/* Bottom info footer */}
             <div className="p-4 border-t border-border/60 text-center text-[11px] text-muted-foreground font-mono">
-              Firm Cloud • Production v1.0
+              Firm • v1.0
             </div>
           </div>
         </SheetContent>
