@@ -196,14 +196,14 @@ export function getApiBaseUrl() {
     }
 
     // In local development or local testing (localhost / 127.0.0.1), connect directly to Express
-    // backend (port 4000) to bypass Next.js dev server rewrite proxy overhead (~500ms penalty).
+    // backend (port 4000) to bypass Next.js dev server rewrite proxy and remote tunnel overhead.
     if (hostname === "localhost" || hostname === "127.0.0.1") {
-      return process.env.NEXT_PUBLIC_API_URL || `http://${hostname}:4000/api`;
+      return `http://${hostname}:4000/api`;
     }
 
     // In reverse-proxied / tunneled environments (Cloudflare Tunnel, Tailscale Funnel, VPS IP),
-    // route through same-origin `/api` which Next.js reverse-proxies to Express.
-    return `${window.location.origin}/api`;
+    // route through same-origin `/api` which Next.js reverse-proxies to Express, or configured API URL.
+    return process.env.NEXT_PUBLIC_API_URL || `${window.location.origin}/api`;
   }
 
   return process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
@@ -211,7 +211,7 @@ export function getApiBaseUrl() {
 
 // In-flight GET request deduplication map to prevent redundant concurrent fetches
 const inFlightRequests = new Map();
-// Lightweight TTL cache for high-frequency idempotent lookups (e.g. /auth/session)
+// Lightweight TTL cache for high-frequency idempotent lookups (e.g. /auth/session, /summary)
 const shortResponseCache = new Map();
 
 /**
@@ -229,8 +229,8 @@ async function request(endpoint, options = {}) {
 
   // Cache & deduplication for GET requests
   if (method === "GET") {
-    // 1. Check TTL cache for session endpoint (valid for 5s)
-    if (endpoint === "/auth/session") {
+    // 1. Check TTL cache for session endpoint (5s) and summary endpoints (10s)
+    if (endpoint === "/auth/session" || endpoint.includes("/summary")) {
       const cached = shortResponseCache.get(reqKey);
       if (cached && Date.now() < cached.expiresAt) {
         return cached.data;
@@ -304,12 +304,19 @@ async function request(endpoint, options = {}) {
       throw new Error(data.message || `API Error: ${response.status}`);
     }
 
-    // Cache /auth/session responses for 5 seconds
-    if (method === "GET" && endpoint === "/auth/session") {
-      shortResponseCache.set(reqKey, {
-        data,
-        expiresAt: Date.now() + 5000,
-      });
+    // Cache /auth/session responses (5s) and /summary responses (10s)
+    if (method === "GET") {
+      if (endpoint === "/auth/session") {
+        shortResponseCache.set(reqKey, {
+          data,
+          expiresAt: Date.now() + 5000,
+        });
+      } else if (endpoint.includes("/summary")) {
+        shortResponseCache.set(reqKey, {
+          data,
+          expiresAt: Date.now() + 10000,
+        });
+      }
     }
 
     return data;

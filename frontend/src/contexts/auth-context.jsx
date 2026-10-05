@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/services/auth.service";
 import { isDevAuthBypass } from "@/lib/auth";
@@ -128,24 +128,37 @@ export function AuthProvider({ children }) {
     return session;
   }, []);
 
+  const restoringPromiseRef = useRef(null);
+
   const restoreSession = useCallback(async () => {
-    try {
-      const session = await authService.validateSession();
-      if (session) {
-        setUser(session.user);
-        setFirm(session.firm);
-        setRole(session.role);
-        setPermissions(session.permissions || []);
-        setIsAuthenticated(true);
-        if (typeof window !== "undefined") {
-          try { localStorage.setItem("firm_cached_session", JSON.stringify(session)); } catch {}
-        }
-        return true;
-      }
-    } catch {
-      // ignore
+    if (restoringPromiseRef.current) {
+      return restoringPromiseRef.current;
     }
-    return false;
+
+    const promise = (async () => {
+      try {
+        const session = await authService.validateSession();
+        if (session) {
+          setUser(session.user);
+          setFirm(session.firm);
+          setRole(session.role);
+          setPermissions(session.permissions || []);
+          setIsAuthenticated(true);
+          if (typeof window !== "undefined") {
+            try { localStorage.setItem("firm_cached_session", JSON.stringify(session)); } catch {}
+          }
+          return true;
+        }
+      } catch {
+        // ignore
+      } finally {
+        restoringPromiseRef.current = null;
+      }
+      return false;
+    })();
+
+    restoringPromiseRef.current = promise;
+    return promise;
   }, []);
 
   // Handle native deep link URLs (com.firm.app://callback?token=...)

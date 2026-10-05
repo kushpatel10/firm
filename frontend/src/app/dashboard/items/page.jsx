@@ -209,6 +209,15 @@ export default function ItemsPage() {
     setEditDialogOpen(true);
   };
 
+  const openDeleteDialog = (item) => {
+    setSelectedItem(item);
+    setDeleteDialogOpen(true);
+  };
+
+  const openEditDialog = (item) => {
+    openEditModal(item);
+  };
+
   // Add a size to current list
   const addSizeTag = (sizeName) => {
     const trimmed = sizeName.trim();
@@ -712,24 +721,28 @@ export default function ItemsPage() {
 
                 {/* Action Buttons */}
                 <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs gap-1.5 rounded-xl font-medium"
-                    onClick={() => openEditDialog(item)}
-                  >
-                    <Edit className="h-3.5 w-3.5" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 text-xs gap-1.5 text-destructive hover:bg-destructive/10 rounded-xl"
-                    onClick={() => openDeleteDialog(item)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    Delete
-                  </Button>
+                  <PermissionGate permission="Inventory.Edit">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-xs gap-1.5 rounded-xl font-medium"
+                      onClick={() => openEditDialog(item)}
+                    >
+                      <Edit className="h-3.5 w-3.5" />
+                      Edit
+                    </Button>
+                  </PermissionGate>
+                  <PermissionGate permission="Inventory.Delete">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 text-xs gap-1.5 text-destructive hover:bg-destructive/10 rounded-xl"
+                      onClick={() => openDeleteDialog(item)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete
+                    </Button>
+                  </PermissionGate>
                 </div>
               </div>
             );

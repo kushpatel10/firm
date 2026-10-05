@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { StatsCard } from "@/components/shared/stats-card";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -20,9 +20,11 @@ export default function FirmDashboard() {
   const firmId = firm?.id;
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const loadingRef = useRef(false);
 
   const loadDashboard = useCallback(async () => {
-    if (!firmId) return;
+    if (!firmId || loadingRef.current) return;
+    loadingRef.current = true;
     setLoading(true);
     try {
       const summary = await dashboardService.getFirmSummary(firmId);
@@ -31,6 +33,7 @@ export default function FirmDashboard() {
       console.error("Failed to load firm dashboard data", err);
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
   }, [firmId]);
 

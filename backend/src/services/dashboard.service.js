@@ -5,8 +5,17 @@
 
 const prisma = require("../config/database");
 
+// Fast in-memory cache for firm summary (10s TTL) to prevent DB hammering on re-renders
+const summaryCache = new Map();
+const CACHE_TTL_MS = 10000;
+
 const dashboardService = {
   async getFirmSummary(firmId) {
+    const cached = summaryCache.get(firmId);
+    if (cached && Date.now() < cached.expiresAt) {
+      return cached.data;
+    }
+
     const [sales, purchases, expenses, inventoryCount, recentActivity, recentSales] = await Promise.all([
       prisma.sale.aggregate({
         where: { firmId },
@@ -40,7 +49,7 @@ const dashboardService = {
       }),
     ]);
 
-    return {
+    const result = {
       stats: {
         totalSales: sales._sum.total || 0,
         salesCount: sales._count.id || 0,
@@ -53,6 +62,13 @@ const dashboardService = {
       recentSales,
       recentActivity,
     };
+
+    summaryCache.set(firmId, {
+      data: result,
+      expiresAt: Date.now() + CACHE_TTL_MS,
+    });
+
+    return result;
   },
 
   async getAdminSummary() {
