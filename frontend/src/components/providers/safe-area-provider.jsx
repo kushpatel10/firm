@@ -31,18 +31,15 @@ export function SafeAreaProvider({ children }) {
         const isDark = document.documentElement.classList.contains("dark");
         const style = isDark ? "DARK" : "LIGHT";
 
-        // 1. Direct native bridge plugin check (Capacitor runtime)
-        const nativeStatusBar = window.Capacitor?.Plugins?.StatusBar;
-        if (nativeStatusBar?.setStyle) {
-          await nativeStatusBar.setOverlaysWebView?.({ overlay: true });
-          await nativeStatusBar.setStyle({ style });
-          return;
-        }
+        // Capacitor runtime plugin (injected by native Android/iOS bridge)
+        const statusBar =
+          window.Capacitor?.Plugins?.StatusBar ||
+          window.Capacitor?.registerPlugin?.("StatusBar");
 
-        // 2. Dynamic import fallback
-        const { StatusBar, Style } = await import("@capacitor/status-bar");
-        await StatusBar.setOverlaysWebView({ overlay: true });
-        await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
+        if (statusBar) {
+          await statusBar.setOverlaysWebView?.({ overlay: true });
+          await statusBar.setStyle?.({ style });
+        }
       } catch {
         // Ignored if plugin not loaded or non-native
       }
