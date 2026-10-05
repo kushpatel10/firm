@@ -23,6 +23,7 @@ import { firmService } from "@/services/firm.service";
 import { roleService } from "@/services/role.service";
 import { toast } from "sonner";
 import { formatDate } from "@/lib/utils";
+import { placeholders } from "@/config/placeholders";
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -136,7 +137,7 @@ export default function UsersPage() {
       />
 
       <div className="flex flex-col sm:flex-row gap-3">
-        <SearchInput placeholder="Search users…" onSearch={setSearch} className="sm:w-80" />
+        <SearchInput placeholder={placeholders.admin.usersSearch} onSearch={setSearch} className="sm:w-80" />
         <FilterDropdown
           label="Status"
           options={Object.values(USER_STATUS).map((s) => ({
@@ -176,7 +177,7 @@ export default function UsersPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="user@gmail.com"
+                placeholder={placeholders.admin.userEmail}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -186,7 +187,7 @@ export default function UsersPage() {
               <Label htmlFor="name">Display Name</Label>
               <Input
                 id="name"
-                placeholder="Full name"
+                placeholder={placeholders.admin.userName}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -195,8 +196,8 @@ export default function UsersPage() {
               <Label htmlFor="firm">Assign Firm *</Label>
               <Select value={selectedFirmId} onValueChange={setSelectedFirmId} required>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select firm">
-                    {firms.find((f) => f.id === selectedFirmId)?.name || "Select firm"}
+                  <SelectValue placeholder={placeholders.admin.selectFirm}>
+                    {firms.find((f) => f.id === selectedFirmId)?.name || placeholders.admin.selectFirm}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -214,8 +215,8 @@ export default function UsersPage() {
               <Label htmlFor="role">Assign Role *</Label>
               <Select value={selectedRoleId} onValueChange={setSelectedRoleId} required>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select role">
-                    {roles.find((r) => r.id === selectedRoleId)?.name || "Select role"}
+                  <SelectValue placeholder={placeholders.admin.selectRole}>
+                    {roles.find((r) => r.id === selectedRoleId)?.name || placeholders.admin.selectRole}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>

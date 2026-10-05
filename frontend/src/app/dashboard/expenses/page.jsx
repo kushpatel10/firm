@@ -18,6 +18,7 @@ import { expenseService } from "@/services/expense.service";
 import { useAuth } from "@/contexts/auth-context";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { toast } from "sonner";
+import { placeholders } from "@/config/placeholders";
 
 export default function ExpensesPage() {
   const { firm, loading: authLoading } = useAuth();
@@ -247,7 +248,7 @@ export default function ExpensesPage() {
 
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-          <SearchInput placeholder="Search expenses…" onSearch={setSearch} className="sm:w-80" />
+          <SearchInput placeholder={placeholders.expenses.search} onSearch={setSearch} className="sm:w-80" />
           <FilterDropdown
             label="Category"
             options={DEFAULT_EXPENSE_CATEGORIES.map((c) => ({ value: c, label: c }))}
@@ -342,7 +343,7 @@ export default function ExpensesPage() {
               <Label htmlFor="description">Description</Label>
               <Input
                 id="description"
-                placeholder="e.g. Office electricity bill"
+                placeholder={placeholders.expenses.description}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
@@ -354,7 +355,7 @@ export default function ExpensesPage() {
                 id="amount"
                 type="number"
                 step="0.01"
-                placeholder="0.00"
+                placeholder={placeholders.expenses.amount}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required

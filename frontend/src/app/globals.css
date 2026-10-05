@@ -49,79 +49,79 @@
 }
 
 /* ──────────────────────────────────────────────
-   ChatGPT UI Theme — Calm, Glare-Free Light & Dark Palette
-   Low-glare, eye-friendly paper slate light mode & deep charcoal dark mode
+   Production Native Mobile & Web Theme (Telegram / WhatsApp inspired)
+   Luminous, crisp, high-contrast light mode & deep OLED obsidian dark mode
    ────────────────────────────────────────────── */
 :root {
-  --background: oklch(0.925 0 0); /* #ececed - calm, low-glare soothing paper canvas */
-  --foreground: oklch(0.20 0 0); /* #1f1f1f - soft dark charcoal text, zero harsh glare */
-  --card: oklch(0.975 0 0); /* #f7f7f8 - calm elevated card, not blinding white */
-  --card-foreground: oklch(0.20 0 0);
-  --popover: oklch(0.975 0 0);
-  --popover-foreground: oklch(0.20 0 0);
-  --primary: oklch(0.20 0 0); /* #1f1f1f - solid charcoal primary button */
-  --primary-foreground: oklch(0.975 0 0); /* #f7f7f8 */
-  --secondary: oklch(0.89 0 0); /* #dfdfe2 - tactile soft-grey pill */
-  --secondary-foreground: oklch(0.20 0 0);
-  --muted: oklch(0.90 0 0); /* #e2e2e5 */
-  --muted-foreground: oklch(0.48 0 0); /* #666666 - clear, balanced readability */
-  --accent: oklch(0.86 0 0); /* #d4d4d8 - hover state */
-  --accent-foreground: oklch(0.20 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.86 0 0); /* #d8d8dc - clear, crisp boundary for cards */
-  --input: oklch(0.86 0 0);
-  --ring: oklch(0.35 0 0);
-  --chart-1: oklch(0.30 0 0);
-  --chart-2: oklch(0.45 0 0);
-  --chart-3: oklch(0.60 0 0);
-  --chart-4: oklch(0.75 0 0);
-  --chart-5: oklch(0.85 0 0);
-  --radius: 0.75rem;
-  --sidebar: oklch(0.955 0 0); /* #f2f2f4 - comfortable, low-glare navbar & sidebar */
-  --sidebar-foreground: oklch(0.20 0 0);
-  --sidebar-primary: oklch(0.20 0 0);
-  --sidebar-primary-foreground: oklch(0.975 0 0);
-  --sidebar-accent: oklch(0.90 0 0); /* #e2e2e5 */
-  --sidebar-accent-foreground: oklch(0.20 0 0);
-  --sidebar-border: oklch(0.86 0 0); /* crisp separation line */
-  --sidebar-ring: oklch(0.35 0 0);
+  --background: oklch(0.985 0.003 240); /* #f8fafc - luminous crisp modern canvas */
+  --foreground: oklch(0.18 0.02 260); /* #0f172a - rich slate-900, zero dull grey */
+  --card: oklch(1 0 0); /* #ffffff - pristine elevated card */
+  --card-foreground: oklch(0.18 0.02 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.02 260);
+  --primary: oklch(0.52 0.22 260); /* #2563eb - vibrant Telegram Sapphire Azure */
+  --primary-foreground: oklch(0.99 0 0); /* #ffffff - crisp white button text */
+  --secondary: oklch(0.96 0.005 240); /* #f1f5f9 - tactile soft-slate pill */
+  --secondary-foreground: oklch(0.22 0.03 260);
+  --muted: oklch(0.96 0.005 240); /* #f1f5f9 */
+  --muted-foreground: oklch(0.48 0.02 260); /* #64748b - readable, professional secondary */
+  --accent: oklch(0.94 0.01 250); /* #e2e8f0 - hover state */
+  --accent-foreground: oklch(0.18 0.02 260);
+  --destructive: oklch(0.58 0.22 25); /* #ef4444 */
+  --border: oklch(0.92 0.005 240); /* #e2e8f0 - clear, crisp boundary for cards */
+  --input: oklch(0.92 0.005 240);
+  --ring: oklch(0.52 0.22 260);
+  --chart-1: oklch(0.52 0.22 260);
+  --chart-2: oklch(0.60 0.18 160);
+  --chart-3: oklch(0.65 0.18 45);
+  --chart-4: oklch(0.55 0.20 300);
+  --chart-5: oklch(0.70 0.15 200);
+  --radius: 0.875rem;
+  --sidebar: oklch(0.99 0.002 240); /* #ffffff / #f8fafc */
+  --sidebar-foreground: oklch(0.18 0.02 260);
+  --sidebar-primary: oklch(0.52 0.22 260);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.96 0.005 240);
+  --sidebar-accent-foreground: oklch(0.18 0.02 260);
+  --sidebar-border: oklch(0.92 0.005 240);
+  --sidebar-ring: oklch(0.52 0.22 260);
 }
 
 /* ──────────────────────────────────────────────
-   Dark Theme — Deep Charcoal & High Legibility
+   Dark Theme — Deep Telegram OLED Obsidian
    ────────────────────────────────────────────── */
 .dark {
-  --background: oklch(0.14 0 0); /* #121212 - sleek near-black canvas */
-  --foreground: oklch(0.97 0 0); /* #f5f5f7 - crisp readable text */
-  --card: oklch(0.175 0 0); /* #18181b - distinct elevated surface */
-  --card-foreground: oklch(0.97 0 0);
-  --popover: oklch(0.175 0 0);
-  --popover-foreground: oklch(0.97 0 0);
-  --primary: oklch(1 0 0); /* #ffffff - crisp white primary button */
-  --primary-foreground: oklch(0.14 0 0); /* #121212 */
-  --secondary: oklch(0.22 0 0); /* #212124 - tactile soft-dark pill */
-  --secondary-foreground: oklch(0.97 0 0);
-  --muted: oklch(0.20 0 0); /* #1d1d20 */
-  --muted-foreground: oklch(0.68 0 0); /* #a1a1aa - clear, legible secondary text */
-  --accent: oklch(0.24 0 0); /* #27272a - hover state */
-  --accent-foreground: oklch(1 0 0);
+  --background: oklch(0.13 0.015 260); /* #0b0f17 - sleek deep obsidian canvas */
+  --foreground: oklch(0.98 0.005 240); /* #f8fafc - bright crisp text */
+  --card: oklch(0.17 0.02 260); /* #161e2e - distinct elevated surface */
+  --card-foreground: oklch(0.98 0.005 240);
+  --popover: oklch(0.17 0.02 260);
+  --popover-foreground: oklch(0.98 0.005 240);
+  --primary: oklch(0.68 0.19 250); /* #38bdf8 - vibrant electric azure/cyan button */
+  --primary-foreground: oklch(0.10 0.02 260); /* dark text on vibrant button */
+  --secondary: oklch(0.22 0.02 260); /* #1e293b - tactile dark slate pill */
+  --secondary-foreground: oklch(0.98 0.005 240);
+  --muted: oklch(0.20 0.02 260);
+  --muted-foreground: oklch(0.68 0.02 260); /* #94a3b8 - clear, readable */
+  --accent: oklch(0.24 0.02 260);
+  --accent-foreground: oklch(0.98 0.005 240);
   --destructive: oklch(0.65 0.18 22);
-  --border: oklch(0.24 0 0); /* #27272a - clean boundary for cards */
-  --input: oklch(0.24 0 0);
-  --ring: oklch(0.70 0 0);
-  --chart-1: oklch(0.95 0 0);
-  --chart-2: oklch(0.75 0 0);
-  --chart-3: oklch(0.55 0 0);
-  --chart-4: oklch(0.35 0 0);
-  --chart-5: oklch(0.25 0 0);
-  --sidebar: oklch(0.16 0 0); /* #151518 - balanced contrast */
-  --sidebar-foreground: oklch(0.97 0 0);
-  --sidebar-primary: oklch(1 0 0);
-  --sidebar-primary-foreground: oklch(0.14 0 0);
-  --sidebar-accent: oklch(0.22 0 0); /* #212124 */
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.24 0 0);
-  --sidebar-ring: oklch(0.70 0 0);
+  --border: oklch(0.25 0.02 260); /* #2a3547 */
+  --input: oklch(0.25 0.02 260);
+  --ring: oklch(0.68 0.19 250);
+  --chart-1: oklch(0.68 0.19 250);
+  --chart-2: oklch(0.70 0.18 160);
+  --chart-3: oklch(0.75 0.18 45);
+  --chart-4: oklch(0.70 0.20 300);
+  --chart-5: oklch(0.80 0.15 200);
+  --sidebar: oklch(0.15 0.018 260);
+  --sidebar-foreground: oklch(0.98 0.005 240);
+  --sidebar-primary: oklch(0.68 0.19 250);
+  --sidebar-primary-foreground: oklch(0.10 0.02 260);
+  --sidebar-accent: oklch(0.22 0.02 260);
+  --sidebar-accent-foreground: oklch(0.98 0.005 240);
+  --sidebar-border: oklch(0.25 0.02 260);
+  --sidebar-ring: oklch(0.68 0.19 250);
 }
 
 @layer base {

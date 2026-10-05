@@ -59,13 +59,13 @@ function NavContent({ collapsed, onNavigate }) {
               className={cn(
                 "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-all duration-150 min-h-[44px]",
                 isActive
-                  ? "bg-secondary text-foreground font-semibold shadow-xs border border-border/70"
-                  : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                  ? "bg-primary/10 text-primary font-semibold shadow-xs border border-primary/20"
+                  : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground"
               )}
             >
               <item.icon className={cn(
                 "h-[19px] w-[19px] shrink-0 transition-colors",
-                isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                isActive ? "text-primary stroke-[2.5]" : "text-muted-foreground group-hover:text-foreground"
               )} />
               {!collapsed && <span className="truncate">{item.label}</span>}
             </Link>
@@ -76,7 +76,7 @@ function NavContent({ collapsed, onNavigate }) {
 
         <button
           onClick={logout}
-          className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium text-muted-foreground hover:bg-secondary/60 hover:text-destructive transition-all duration-150 w-full cursor-pointer min-h-[44px]"
+          className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-150 w-full cursor-pointer min-h-[44px]"
         >
           <LogOut className="h-[19px] w-[19px] shrink-0 text-muted-foreground group-hover:text-destructive transition-colors" />
           {!collapsed && <span>Sign out</span>}
@@ -87,29 +87,43 @@ function NavContent({ collapsed, onNavigate }) {
 }
 
 export function FirmSidebar() {
-  const { firm } = useAuth();
+  const { firm, user, role } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const { mobileOpen, setMobileOpen } = useSidebar();
 
-  const firmName = firm?.name || "Firm";
+  const firmName = firm?.name || "Firm Workspace";
 
   return (
     <>
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer (WhatsApp / Telegram style) */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-72 sm:w-80 p-0 pt-safe pb-safe border-r border-border/70 bg-sidebar flex flex-col h-full">
+        <SheetContent side="left" className="w-76 sm:w-84 p-0 pt-safe pb-safe border-r border-border/70 bg-card flex flex-col h-full shadow-2xl">
           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
           <div className="flex flex-col h-full">
-            <div className="flex items-center gap-3 px-4 py-4 border-b border-border/70">
-              <div className="h-9 w-9 rounded-xl bg-secondary border border-border/80 text-foreground flex items-center justify-center text-sm font-semibold shrink-0 shadow-xs">
-                {firmName.charAt(0)}
+            {/* Telegram-style Profile Banner */}
+            <div className="flex items-center gap-3.5 px-5 py-5 border-b border-border/70 bg-muted/20">
+              <div className="relative shrink-0">
+                <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-primary to-blue-600 text-white font-bold text-lg flex items-center justify-center shadow-md">
+                  {firmName.charAt(0).toUpperCase()}
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-card" />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold tracking-tight text-foreground truncate">{firmName}</p>
-                <p className="text-xs text-muted-foreground font-normal">Workspace</p>
+                <p className="text-base font-bold tracking-tight text-foreground truncate">{firmName}</p>
+                <p className="text-xs text-muted-foreground truncate">{firm?.email || firm?.phone || user?.name || "Production Workspace"}</p>
+                {role?.name && (
+                  <span className="inline-block mt-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
+                    {role.name}
+                  </span>
+                )}
               </div>
             </div>
             <NavContent collapsed={false} onNavigate={() => setMobileOpen(false)} />
+
+            {/* Bottom info footer */}
+            <div className="p-4 border-t border-border/60 text-center text-[11px] text-muted-foreground font-mono">
+              Firm Cloud • Production v1.0
+            </div>
           </div>
         </SheetContent>
       </Sheet>

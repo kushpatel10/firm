@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { placeholders } from "@/config/placeholders";
 
 export function SizeSelector({
   value = "",
@@ -31,7 +32,7 @@ export function SizeSelector({
     return (
       <div className="flex items-center gap-1.5">
         <Input
-          placeholder="Size / Dim (e.g. 950x1120, XL)"
+          placeholder={placeholders.items.sizeDimPill}
           value={value}
           onChange={(e) => onSelectSize && onSelectSize(e.target.value, null)}
           disabled={disabled}
@@ -105,7 +106,7 @@ export function SizeSelector({
         disabled={disabled}
       >
         <SelectTrigger className="h-8 text-xs font-mono min-w-[120px]">
-          <SelectValue placeholder="Select Size" />
+          <SelectValue placeholder={placeholders.items.selectSize} />
         </SelectTrigger>
         <SelectContent>
           {normalizedSizes.map((s, idx) => (

@@ -11,10 +11,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, UserCircle, Loader2, Edit, Trash2 } from "lucide-react";
+import { Plus, UserCircle, Loader2, Edit, Trash2, Phone, MessageSquare, MapPin } from "lucide-react";
 import { customerService } from "@/services/customer.service";
 import { useAuth } from "@/contexts/auth-context";
 import { toast } from "sonner";
+import { placeholders } from "@/config/placeholders";
 
 export default function CustomersPage() {
   const { firm, loading: authLoading } = useAuth();
@@ -62,6 +63,15 @@ export default function CustomersPage() {
       setLoading(false);
     }
   }, [authLoading, firmId, loadCustomers]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("action") === "new") {
+        setDialogOpen(true);
+      }
+    }
+  }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -207,22 +217,133 @@ export default function CustomersPage() {
         }
       />
 
-      <SearchInput placeholder="Search party name, phone, or email…" onSearch={setSearch} className="sm:w-80" />
+      <SearchInput placeholder={placeholders.customers.search} onSearch={setSearch} className="sm:w-80" />
 
-      <DataTable
-        columns={columns}
-        data={filteredCustomers}
-        loading={loading}
-        emptyState={
+      {/* Desktop Table View */}
+      <div className="hidden md:block">
+        <DataTable
+          columns={columns}
+          data={filteredCustomers}
+          loading={loading}
+          emptyState={
+            <EmptyState
+              icon={<UserCircle className="h-8 w-8 text-muted-foreground" />}
+              title="No customers yet"
+              description="Add customer parties to track orders and maintain relationships."
+              actionLabel="Add Customer"
+              onAction={() => setDialogOpen(true)}
+            />
+          }
+        />
+      </div>
+
+      {/* Mobile WhatsApp/Telegram Style Directory Cards */}
+      <div className="block md:hidden space-y-3">
+        {loading ? (
+          <div className="p-8 text-center bg-card rounded-2xl border flex flex-col items-center justify-center gap-2">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <p className="text-xs text-muted-foreground">Loading directory...</p>
+          </div>
+        ) : filteredCustomers.length === 0 ? (
           <EmptyState
             icon={<UserCircle className="h-8 w-8 text-muted-foreground" />}
-            title="No customers yet"
-            description="Add customer parties to track orders and maintain relationships."
+            title="No parties found"
+            description={search ? "Try adjusting your search query." : "Save your first customer or party."}
             actionLabel="Add Customer"
             onAction={() => setDialogOpen(true)}
           />
-        }
-      />
+        ) : (
+          filteredCustomers.map((cust) => {
+            const initials = cust.name
+              ? cust.name.trim().split(" ").slice(0, 2).map((n) => n[0]?.toUpperCase()).join("")
+              : "CU";
+            const cleanPhone = cust.phone ? cust.phone.replace(/[^0-9]/g, "") : null;
+
+            return (
+              <div
+                key={cust.id}
+                className="bg-card rounded-2xl border p-4 shadow-sm hover:shadow-md transition-all space-y-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center text-primary font-bold text-base shrink-0 shadow-sm">
+                      {initials}
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-sm text-foreground truncate">{cust.name}</h4>
+                      {cust.phone ? (
+                        <p className="text-xs text-muted-foreground font-mono mt-0.5">{cust.phone}</p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground italic mt-0.5">No phone number</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 rounded-lg"
+                      onClick={() => openEditDialog(cust)}
+                      title="Edit"
+                    >
+                      <Edit className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10 rounded-lg"
+                      onClick={() => openDeleteDialog(cust)}
+                      title="Delete"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Address or Email details */}
+                {(cust.address || cust.email) && (
+                  <div className="text-xs text-muted-foreground space-y-1 bg-muted/40 p-2.5 rounded-xl border border-border/50">
+                    {cust.address && (
+                      <div className="flex items-center gap-1.5 truncate">
+                        <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <span className="truncate">{cust.address}</span>
+                      </div>
+                    )}
+                    {cust.email && (
+                      <div className="text-muted-foreground truncate font-mono text-[11px]">
+                        {cust.email}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Quick Action Buttons: Call & WhatsApp */}
+                {cleanPhone && (
+                  <div className="flex items-center gap-2 pt-1 border-t border-border/40">
+                    <a
+                      href={`tel:${cleanPhone}`}
+                      className="flex-1 flex items-center justify-center gap-1.5 h-8 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition-colors"
+                    >
+                      <Phone className="h-3.5 w-3.5" />
+                      Call
+                    </a>
+                    <a
+                      href={`https://wa.me/${cleanPhone}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-1.5 h-8 rounded-xl bg-[#25D366]/10 text-[#25D366] text-xs font-semibold hover:bg-[#25D366]/20 transition-colors"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5" />
+                      WhatsApp
+                    </a>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
 
       {/* Add Customer Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -236,7 +357,7 @@ export default function CustomersPage() {
               <Label htmlFor="name">Customer / Party Name *</Label>
               <Input
                 id="name"
-                placeholder="Full name or Business name"
+                placeholder={placeholders.customers.name}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -246,7 +367,7 @@ export default function CustomersPage() {
               <Label htmlFor="phone">Phone Number</Label>
               <Input
                 id="phone"
-                placeholder="+91 98765 43210"
+                placeholder={placeholders.customers.phone}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
@@ -256,7 +377,7 @@ export default function CustomersPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="customer@example.com"
+                placeholder={placeholders.customers.email}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -265,7 +386,7 @@ export default function CustomersPage() {
               <Label htmlFor="address">Address</Label>
               <Textarea
                 id="address"
-                placeholder="Full address"
+                placeholder={placeholders.customers.address}
                 rows={2}
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}

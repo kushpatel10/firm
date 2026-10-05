@@ -20,7 +20,7 @@ export function PageHeader({ title, description, breadcrumbs = [], actions }) {
   return (
     <div className="space-y-1">
       {breadcrumbs.length > 0 && (
-        <Breadcrumb>
+        <Breadcrumb className="hidden sm:block">
           <BreadcrumbList>
             {breadcrumbs.map((crumb, i) => (
               <Fragment key={i}>
@@ -39,14 +39,18 @@ export function PageHeader({ title, description, breadcrumbs = [], actions }) {
           </BreadcrumbList>
         </Breadcrumb>
       )}
-      <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between border-b border-border/70 pb-4 sm:pb-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border/70 pb-3.5 sm:pb-5">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">{title}</h1>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground">{title}</h1>
           {description && (
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">{description}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-2">{description}</p>
           )}
         </div>
-        {actions && <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">{actions}</div>}
+        {actions && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 touch-scroll w-full sm:w-auto shrink-0">
+            {actions}
+          </div>
+        )}
       </div>
     </div>
   );

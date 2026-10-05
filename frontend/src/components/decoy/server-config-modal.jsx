@@ -34,6 +34,7 @@ import {
   normalizeServerUrl,
 } from "@/lib/api-client";
 import { useStealth } from "@/contexts/stealth-context";
+import { placeholders } from "@/config/placeholders";
 
 export function ServerConfigModal({ open, onOpenChange, onSaved }) {
   const {
@@ -156,7 +157,7 @@ export function ServerConfigModal({ open, onOpenChange, onSaved }) {
               </Label>
               <div className="relative">
                 <Input
-                  placeholder="https://firm.yourdomain.com or http://192.168.1.100:4000"
+                  placeholder={placeholders.serverConfig.vpsUrl}
                   value={rawUrl}
                   onChange={(e) => {
                     setRawUrl(e.target.value);
@@ -284,7 +285,7 @@ export function ServerConfigModal({ open, onOpenChange, onSaved }) {
                 <Input
                   type={showPin ? "text" : "password"}
                   maxLength={8}
-                  placeholder="e.g. 2007"
+                  placeholder={placeholders.serverConfig.year}
                   value={newPin}
                   onChange={(e) => setNewPin(e.target.value)}
                   className="font-mono text-center tracking-widest text-sm h-10 pr-10 bg-muted/20"

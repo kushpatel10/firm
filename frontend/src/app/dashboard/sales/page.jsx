@@ -28,8 +28,9 @@ import { ItemCombobox } from "@/features/firm/components/item-combobox";
 import { SizeSelector } from "@/features/firm/components/size-selector";
 import { QuickAddItemDialog } from "@/features/firm/components/quick-add-item-dialog";
 import { SaleVoucherFlow } from "@/features/sale-voucher";
-import { formatCurrency, formatDate, numberToWords } from "@/lib/utils";
+import { formatCurrency, formatDate, numberToWords, getInitials } from "@/lib/utils";
 import { toast } from "sonner";
+import { placeholders } from "@/config/placeholders";
 
 export default function SalesPage() {
   const { firm: authFirm, loading: authLoading } = useAuth();
@@ -113,6 +114,16 @@ export default function SalesPage() {
       setLoading(false);
     }
   }, [authLoading, firmId, loadSalesData]);
+
+  // Support action=new from Quick Action FAB / Mobile menu
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("action") === "new") {
+        setSaleFlowOpen(true);
+      }
+    }
+  }, []);
 
   // Helper to parse sizes array from inventory item
   const parseItemSizes = (item) => {
@@ -664,7 +675,7 @@ export default function SalesPage() {
 
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-          <SearchInput placeholder="Search party name or invoice #…" onSearch={setSearch} className="sm:w-80" />
+          <SearchInput placeholder={placeholders.sales.search} onSearch={setSearch} className="sm:w-80" />
           <FilterDropdown
             label="Status"
             options={Object.values(SALE_STATUS).map((s) => ({ value: s, label: s.charAt(0) + s.slice(1).toLowerCase() }))}
@@ -733,76 +744,87 @@ export default function SalesPage() {
               onAction={openCreateSale}
             />
           ) : (
-            filteredSales.map((sale) => (
-              <div key={sale.id} className="border border-border/80 rounded-2xl p-4 bg-card space-y-3 shadow-xs">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-foreground">
-                      {sale.invoiceNumber || `INV-${sale.id?.slice(0, 6)}`}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-block h-3.5 w-3.5 rounded-full border shrink-0 shadow-xs ${
-                        sale.saleType === "KACHU"
-                          ? "bg-black border-slate-600 dark:border-neutral-500"
-                          : "bg-white border-slate-300 dark:border-neutral-300"
-                      }`}
-                      title={sale.saleType === "KACHU" ? "Black Ledger" : "White Ledger"}
-                    />
-                    <StatusBadge status={sale.status || "CONFIRMED"} />
-                  </div>
-                </div>
+            filteredSales.map((sale) => {
+              const customerName = sale.customerName || sale.customer?.name || "Walk-in Customer";
+              return (
+                <div
+                  key={sale.id}
+                  className="border border-border/80 rounded-2xl p-4 bg-card space-y-3.5 shadow-xs active:scale-[0.99] transition-all"
+                >
+                  {/* Top Row: Avatar + Customer Name + Status Badge */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-primary/20 to-blue-500/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                        {getInitials(customerName)}
+                      </div>
+                      <div className="min-w-0 space-y-0.5">
+                        <p className="font-bold text-sm sm:text-base text-foreground truncate">
+                          {customerName}
+                        </p>
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <span className="font-mono text-xs font-semibold text-foreground/80 bg-muted px-1.5 py-0.5 rounded-md">
+                            {sale.invoiceNumber || `INV-${sale.id?.slice(0, 6)}`}
+                          </span>
+                          <span>•</span>
+                          <span>{formatDate(sale.createdAt || sale.date)}</span>
+                        </div>
+                      </div>
+                    </div>
 
-                <div className="flex justify-between items-baseline pt-0.5">
-                  <div className="min-w-0 pr-2">
-                    <p className="font-semibold text-sm sm:text-base text-foreground truncate">
-                      {sale.customerName || sale.customer?.name || "Walk-in Customer"}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {formatDate(sale.createdAt || sale.date)}
-                    </p>
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      <StatusBadge status={sale.status || "CONFIRMED"} />
+                      <span
+                        className={`inline-block h-2.5 w-2.5 rounded-full border shadow-xs ${
+                          sale.saleType === "KACHU"
+                            ? "bg-black border-slate-600"
+                            : "bg-white border-slate-300"
+                        }`}
+                        title={sale.saleType === "KACHU" ? "Black Ledger" : "White Ledger"}
+                      />
+                    </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-mono text-base sm:text-lg font-bold text-foreground">
+
+                  {/* Amount Row */}
+                  <div className="flex items-center justify-between pt-1 border-t border-border/50 text-xs">
+                    <span className="text-muted-foreground font-medium">
+                      {sale.items?.length || 1} item{sale.items?.length === 1 ? "" : "s"}
+                    </span>
+                    <p className="font-mono text-base sm:text-lg font-extrabold text-foreground">
                       {formatCurrency(sale.total || 0)}
                     </p>
-                    <p className="text-xs text-muted-foreground font-medium mt-0.5">
-                      {sale.items?.length || 1} item{sale.items?.length === 1 ? "" : "s"}
-                    </p>
+                  </div>
+
+                  {/* WhatsApp & Actions Row */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-border/50">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 h-9 text-xs gap-1.5 font-medium rounded-xl"
+                      onClick={() => viewInvoice(sale)}
+                    >
+                      <FileText className="h-3.5 w-3.5" /> View Bill
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="h-9 px-3.5 text-xs gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold rounded-xl"
+                      onClick={() => handleWhatsAppShare(sale)}
+                      title="Share via WhatsApp"
+                    >
+                      <Share2 className="h-3.5 w-3.5" /> WhatsApp
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-9 w-9 p-0 rounded-xl"
+                      title="Edit Voucher"
+                      onClick={() => openEditSale(sale)}
+                    >
+                      <Edit className="h-4 w-4 text-muted-foreground" />
+                    </Button>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2 pt-2.5 border-t border-border/60">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1 h-9.5 text-xs sm:text-sm gap-2 font-medium rounded-xl"
-                    onClick={() => viewInvoice(sale)}
-                  >
-                    <FileText className="h-4 w-4" /> View Bill
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="h-9.5 px-3.5 text-xs sm:text-sm gap-1.5 text-emerald-500 dark:text-emerald-400 font-semibold rounded-xl"
-                    onClick={() => handleWhatsAppShare(sale)}
-                    title="Share via WhatsApp"
-                  >
-                    <Share2 className="h-4 w-4" /> WhatsApp
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-9.5 w-9.5 p-0 rounded-xl"
-                    title="Edit Voucher"
-                    onClick={() => openEditSale(sale)}
-                  >
-                    <Edit className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

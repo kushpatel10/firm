@@ -188,7 +188,7 @@ export function ItemsStep({
                     <span className="font-bold text-sm text-foreground">From Catalog</span>
                   </div>
                   <span className="text-[11px] text-muted-foreground">
-                    Doors, Windows, Glass & configured items
+                    Configured items with custom formulas & dimensions
                   </span>
                 </button>
 

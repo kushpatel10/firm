@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Shield, Loader2 } from "lucide-react";
 import { roleService } from "@/services/role.service";
 import { toast } from "sonner";
+import { placeholders } from "@/config/placeholders";
 
 const PERMISSIONS_BY_MODULE = {
   Sales: ["View", "Create", "Edit", "Delete"],
@@ -222,7 +223,7 @@ export default function RolesPage() {
               <Label htmlFor="roleName">Role Name *</Label>
               <Input
                 id="roleName"
-                placeholder="e.g., Branch Manager"
+                placeholder={placeholders.admin.roleName}
                 value={roleName}
                 onChange={(e) => setRoleName(e.target.value)}
                 required
@@ -232,7 +233,7 @@ export default function RolesPage() {
               <Label htmlFor="roleDesc">Description</Label>
               <Textarea
                 id="roleDesc"
-                placeholder="Describe this role's responsibilities"
+                placeholder={placeholders.admin.roleDesc}
                 rows={2}
                 value={roleDesc}
                 onChange={(e) => setRoleDesc(e.target.value)}

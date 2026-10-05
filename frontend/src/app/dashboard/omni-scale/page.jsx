@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
+import { placeholders } from "@/config/placeholders";
 
 // Unit conversion factors to millimeters (base unit)
 const UNIT_TO_MM = {
@@ -640,7 +641,7 @@ Generated on: ${new Date().toLocaleString()}`;
                           <Input
                             value={row.name}
                             onChange={(e) => updateTallyRow(idx, "name", e.target.value)}
-                            placeholder="Item name"
+                            placeholder={placeholders.omniScale.itemName}
                             className="h-8 text-xs"
                           />
                         </td>
@@ -757,7 +758,7 @@ Generated on: ${new Date().toLocaleString()}`;
               <div className="space-y-2">
                 <Label className="text-xs font-semibold">Scale Preset / Ratio Standard</Label>
                 <Select value={selectedPreset} onValueChange={setSelectedPreset}>
-                  <SelectTrigger><SelectValue placeholder="Select Scale" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={placeholders.omniScale.selectScale} /></SelectTrigger>
                   <SelectContent>
                     {SCALE_PRESETS.map((p) => (
                       <SelectItem key={p.ratio} value={p.ratio}>{p.label}</SelectItem>
@@ -795,7 +796,7 @@ Generated on: ${new Date().toLocaleString()}`;
                   <Input
                     type="number"
                     step="0.1"
-                    placeholder="e.g. 50% for half, 200% for double"
+                    placeholder={placeholders.omniScale.percentage}
                     value={percentageInput}
                     onChange={(e) => setPercentageInput(e.target.value)}
                   />

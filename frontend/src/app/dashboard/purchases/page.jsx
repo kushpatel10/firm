@@ -19,6 +19,7 @@ import { purchaseService } from "@/services/purchase.service";
 import { supplierService } from "@/services/supplier.service";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { toast } from "sonner";
+import { placeholders } from "@/config/placeholders";
 
 const TAX_RATE_PRESETS = [
   { label: "0% (Nil / Exempt)", value: "0" },
@@ -91,6 +92,15 @@ export default function PurchasesPage() {
       setLoading(false);
     }
   }, [authLoading, firmId, loadPurchases]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("action") === "new") {
+        setCreateDialogOpen(true);
+      }
+    }
+  }, []);
 
   // Tax calculation helper for Create Form
   const calcTaxAmount = (subVal, rateType, customVal) => {
@@ -361,7 +371,7 @@ export default function PurchasesPage() {
       />
 
       <div className="flex flex-col sm:flex-row gap-3">
-        <SearchInput placeholder="Search supplier or invoice #…" onSearch={setSearch} className="sm:w-80" />
+        <SearchInput placeholder={placeholders.purchases.search} onSearch={setSearch} className="sm:w-80" />
         <FilterDropdown
           label="Status"
           options={[
@@ -374,11 +384,32 @@ export default function PurchasesPage() {
         />
       </div>
 
-      <DataTable
-        columns={columns}
-        data={filteredPurchases}
-        loading={loading}
-        emptyState={
+      {/* Desktop Table View */}
+      <div className="hidden md:block">
+        <DataTable
+          columns={columns}
+          data={filteredPurchases}
+          loading={loading}
+          emptyState={
+            <EmptyState
+              icon={<ShoppingBag className="h-8 w-8 text-muted-foreground" />}
+              title="No purchases recorded"
+              description="Record a purchase or supplier invoice with GST/Tax calculation."
+              actionLabel="New Purchase"
+              onAction={() => setCreateDialogOpen(true)}
+            />
+          }
+        />
+      </div>
+
+      {/* Mobile Production Cards View */}
+      <div className="block md:hidden space-y-3">
+        {loading ? (
+          <div className="p-8 text-center bg-card rounded-2xl border flex flex-col items-center justify-center gap-2">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <p className="text-xs text-muted-foreground">Loading purchases...</p>
+          </div>
+        ) : filteredPurchases.length === 0 ? (
           <EmptyState
             icon={<ShoppingBag className="h-8 w-8 text-muted-foreground" />}
             title="No purchases recorded"
@@ -386,8 +417,92 @@ export default function PurchasesPage() {
             actionLabel="New Purchase"
             onAction={() => setCreateDialogOpen(true)}
           />
-        }
-      />
+        ) : (
+          filteredPurchases.map((purchase) => {
+            const supplierTitle = purchase.supplierName || purchase.supplier?.name || "General Supplier";
+            const initials = supplierTitle.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
+            const billNo = purchase.invoiceNumber || `PUR-${purchase.id?.slice(0, 6)}`;
+
+            return (
+              <div
+                key={purchase.id}
+                className="bg-card rounded-2xl border p-4 shadow-sm hover:shadow-md transition-all space-y-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold text-sm shrink-0">
+                      {initials}
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-sm text-foreground truncate">{supplierTitle}</h4>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="font-mono text-[11px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          {billNo}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground">
+                          {formatDate(purchase.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <StatusBadge status={purchase.status || "RECEIVED"} />
+                </div>
+
+                {/* Financial Summary */}
+                <div className="bg-muted/40 p-2.5 rounded-xl border border-border/50 flex items-center justify-between text-xs">
+                  <div>
+                    <span className="text-muted-foreground text-[11px]">Subtotal: </span>
+                    <span className="font-mono font-medium">
+                      {formatCurrency(purchase.subtotal || (purchase.total - (purchase.tax || 0)))}
+                    </span>
+                    {purchase.tax > 0 && (
+                      <span className="ml-1.5 text-primary text-[11px] font-mono">
+                        (+{formatCurrency(purchase.tax)} Tax)
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-bold text-foreground font-mono">
+                      {formatCurrency(purchase.total || 0)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Mobile Actions */}
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 h-8 text-xs gap-1.5 rounded-xl"
+                    onClick={() => viewPurchaseInvoice(purchase)}
+                  >
+                    <Printer className="h-3.5 w-3.5" />
+                    Print Bill
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0 rounded-lg text-muted-foreground hover:text-foreground"
+                    onClick={() => openEditDialog(purchase)}
+                    title="Edit"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0 rounded-lg text-destructive hover:bg-destructive/10"
+                    onClick={() => openDeleteDialog(purchase)}
+                    title="Delete"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
 
       {/* Create Purchase Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
@@ -438,8 +553,8 @@ export default function PurchasesPage() {
                   if (s) setSupplierName(s.name);
                 }}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select registered supplier">
-                      {suppliers.find((s) => s.id === supplierId)?.name || supplierName || "Select registered supplier"}
+                    <SelectValue placeholder={placeholders.purchases.selectSupplier}>
+                      {suppliers.find((s) => s.id === supplierId)?.name || supplierName || placeholders.purchases.selectSupplier}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -450,7 +565,7 @@ export default function PurchasesPage() {
                 </Select>
               ) : (
                 <Input
-                  placeholder="Enter Supplier name (e.g. Acme Raw Materials Ltd)"
+                  placeholder={placeholders.purchases.supplierName}
                   value={supplierName}
                   onChange={(e) => setSupplierName(e.target.value)}
                   required
@@ -462,7 +577,7 @@ export default function PurchasesPage() {
                   <Label htmlFor="pur-inv" className="text-xs">Supplier Invoice / Bill #</Label>
                   <Input
                     id="pur-inv"
-                    placeholder="e.g. BILL-9481 (Optional)"
+                    placeholder={placeholders.purchases.invoiceNumber}
                     value={invoiceNumber}
                     onChange={(e) => setInvoiceNumber(e.target.value)}
                   />
@@ -494,7 +609,7 @@ export default function PurchasesPage() {
                   id="pur-subtotal"
                   type="number"
                   step="0.01"
-                  placeholder="0.00"
+                  placeholder={placeholders.purchases.subtotal}
                   value={subtotal}
                   onChange={(e) => setSubtotal(e.target.value)}
                   required
@@ -521,7 +636,7 @@ export default function PurchasesPage() {
                       id="custom-tax"
                       type="number"
                       step="0.01"
-                      placeholder="0.00"
+                      placeholder={placeholders.purchases.customTax}
                       value={taxAmount}
                       onChange={(e) => setTaxAmount(e.target.value)}
                     />
@@ -543,7 +658,7 @@ export default function PurchasesPage() {
                     id="pur-discount"
                     type="number"
                     step="0.01"
-                    placeholder="0.00"
+                    placeholder={placeholders.purchases.discount}
                     value={discount}
                     onChange={(e) => setDiscount(e.target.value)}
                   />

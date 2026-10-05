@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getInitials } from "@/lib/utils";
+import { placeholders } from "@/config/placeholders";
 
 export function PartyStep({
   partyMode,
@@ -165,7 +166,7 @@ export function PartyStep({
                 <div className="relative">
                   <Search className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <Input
-                    placeholder="Search party by name or phone…"
+                    placeholder={placeholders.sales.partySearch}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     autoFocus
@@ -262,7 +263,7 @@ export function PartyStep({
               </Label>
               <Input
                 id="customPartyName"
-                placeholder="e.g. Rahul Traders / Walk-in Customer"
+                placeholder={placeholders.sales.customPartyName}
                 value={partyName}
                 onChange={(e) => setPartyName(e.target.value)}
                 autoFocus
@@ -279,7 +280,7 @@ export function PartyStep({
                 <Phone className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <Input
                   id="customPartyPhone"
-                  placeholder="e.g. +91 98765 43210"
+                  placeholder={placeholders.sales.customPartyPhone}
                   value={partyPhone}
                   onChange={(e) => setPartyPhone(e.target.value)}
                   className="h-11 pl-10 rounded-xl bg-card border-border/80 text-sm font-mono"
@@ -295,7 +296,7 @@ export function PartyStep({
                 <MapPin className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <Input
                   id="customPartyAddress"
-                  placeholder="e.g. Shop 12, Main Market, Delhi"
+                  placeholder={placeholders.sales.customPartyAddress}
                   value={partyAddress}
                   onChange={(e) => setPartyAddress(e.target.value)}
                   className="h-11 pl-10 rounded-xl bg-card border-border/80 text-sm"

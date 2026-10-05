@@ -5,6 +5,7 @@ import { Check, Plus, Sliders } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { placeholders } from "@/config/placeholders";
 
 export function SizeStep({
   category,
@@ -106,7 +107,7 @@ export function SizeStep({
             </Label>
             <Input
               id="customSizeInput"
-              placeholder="e.g. 32 mm, 40 mm Special, 4 Track..."
+              placeholder={placeholders.sales.customSizeInput}
               value={customSizeText}
               onChange={handleCustomChange}
               autoFocus

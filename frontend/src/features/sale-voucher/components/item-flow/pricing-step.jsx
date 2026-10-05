@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/utils";
+import { placeholders } from "@/config/placeholders";
 
 export function PricingStep({
   category,
@@ -76,7 +77,7 @@ export function PricingStep({
                 type="number"
                 step="any"
                 min="0"
-                placeholder="e.g. 250"
+                placeholder={placeholders.sales.rate}
                 value={rate}
                 onChange={(e) => setRate(e.target.value)}
                 autoFocus

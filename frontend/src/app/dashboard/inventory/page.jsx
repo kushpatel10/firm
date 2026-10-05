@@ -38,6 +38,7 @@ import { inventoryService } from "@/services/inventory.service";
 import { useAuth } from "@/contexts/auth-context";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
+import { placeholders } from "@/config/placeholders";
 
 export default function InventoryPage() {
   const { firm, loading: authLoading } = useAuth();
@@ -399,7 +400,7 @@ export default function InventoryPage() {
         </div>
 
         <SearchInput
-          placeholder="Filter by name, SKU, or category…"
+          placeholder={placeholders.inventory.filter}
           onSearch={setSearch}
           className="sm:w-80"
         />
@@ -473,7 +474,7 @@ export default function InventoryPage() {
                 id="adjust-qty"
                 type="number"
                 min="1"
-                placeholder="e.g. 25"
+                placeholder={placeholders.inventory.adjustQuantity}
                 value={adjustQuantity}
                 onChange={(e) => setAdjustQuantity(e.target.value)}
                 required
@@ -485,7 +486,7 @@ export default function InventoryPage() {
               <Label htmlFor="adjust-ref">Reference / Invoice / Challan #</Label>
               <Input
                 id="adjust-ref"
-                placeholder="e.g. PO-8492 or Physical Audit 2026"
+                placeholder={placeholders.inventory.adjustReference}
                 value={adjustReference}
                 onChange={(e) => setAdjustReference(e.target.value)}
               />
@@ -495,7 +496,7 @@ export default function InventoryPage() {
               <Label htmlFor="adjust-notes">Reason / Notes</Label>
               <Input
                 id="adjust-notes"
-                placeholder="e.g. Received new shipment from supplier"
+                placeholder={placeholders.inventory.adjustNotes}
                 value={adjustNotes}
                 onChange={(e) => setAdjustNotes(e.target.value)}
               />

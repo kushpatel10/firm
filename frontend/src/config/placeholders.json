@@ -1,0 +1,136 @@
+{
+  "common": {
+    "search": "Search…",
+    "amount": "0.00",
+    "zero": "0",
+    "phone": "+91 88888 88888",
+    "email": "user@example.com",
+    "address": "Full business address",
+    "notes": "Add notes or remarks…"
+  },
+  "sales": {
+    "search": "Search party name or invoice #…",
+    "partySearch": "Search party by name or phone…",
+    "customPartyName": "e.g. Walk-in Customer",
+    "customPartyPhone": "e.g. +91 88888 88888",
+    "customPartyAddress": "e.g. Mondha Naka, Aurangabad",
+    "invoiceNumber": "Auto-generated if empty (e.g. INV-0001)",
+    "voucherNotes": "Add delivery terms, site notes, vehicle #, or reference",
+    "customItemName": "e.g. Door 12mm / Custom Fitting",
+    "customItemSize": "e.g. 10 ft, XL",
+    "customItemUnit": "e.g. pcs, kg, mtr",
+    "customItemInstructions": "Add specific instructions, material details, etc.",
+    "customSizeInput": "e.g. 32 mm, 40 mm Special, 4 Track...",
+    "rate": "e.g. 250"
+  },
+  "purchases": {
+    "search": "Search supplier or invoice #…",
+    "selectSupplier": "Select registered supplier",
+    "supplierName": "Enter Supplier name (e.g. Acme Raw Materials Ltd)",
+    "invoiceNumber": "e.g. BILL-9481 (Optional)",
+    "subtotal": "0.00",
+    "customTax": "0.00",
+    "discount": "0.00"
+  },
+  "items": {
+    "search": "Search items by name, SKU, or sizes…",
+    "categoryFilter": "Category",
+    "sizesFilter": "Sizes Filter",
+    "name": "e.g. Wooden Pallet, Cotton T-Shirt, Ceramic Tile",
+    "sku": "e.g. PL-001, TS-M-01",
+    "category": "e.g. Pallets, Apparel, Tiles",
+    "sellingPrice": "0.00",
+    "costPrice": "0.00",
+    "customSize": "Type size and press Enter or Add…",
+    "customSizeExample": "Custom size (e.g. 950x1120, XL)…",
+    "sizeDimPill": "Size / Dim (e.g. 950x1120, XL)",
+    "selectSize": "Select Size",
+    "quickAddName": "e.g. Wooden Pallet, Formal Shirt",
+    "quickAddCategory": "e.g. Pallets, Apparel"
+  },
+  "categories": {
+    "search": "Search categories…",
+    "name": "e.g. Plywood & Boards, Granite, Steel Rods",
+    "description": "e.g. Commercial & Waterproof Sheets",
+    "unit": "e.g. sq.ft, cft, rft, piece, kg",
+    "calculationLabel": "e.g. Square Feet, Volume, Running Length",
+    "rateLabel": "e.g. Rate per sq.ft",
+    "formula": "e.g. (LENGTH * WIDTH) / 144",
+    "dimLabel": "e.g. Length",
+    "dimKey": "e.g. length",
+    "dimUnit": "e.g. inch, mm, cm",
+    "subtypeName": "e.g. 18mm Commercial",
+    "subtypeRate": "e.g. 85",
+    "sizePresetName": "e.g. 8x4, Standard"
+  },
+  "inventory": {
+    "filter": "Filter by name, SKU, or category…",
+    "adjustQuantity": "e.g. 25",
+    "adjustReference": "e.g. PO-8492 or Physical Audit 2026",
+    "adjustNotes": "e.g. Received new shipment from supplier"
+  },
+  "customers": {
+    "search": "Search party name, phone, or email…",
+    "name": "Full name or Business name",
+    "phone": "+91 88888 88888",
+    "email": "customer@example.com",
+    "address": "Full address"
+  },
+  "suppliers": {
+    "search": "Search supplier name, phone, or email…",
+    "name": "Business or Vendor Name",
+    "phone": "+91 88888 88888",
+    "email": "supplier@example.com",
+    "address": "Full address"
+  },
+  "expenses": {
+    "search": "Search expenses…",
+    "description": "e.g. Office electricity bill",
+    "amount": "0.00"
+  },
+  "deliveryChallans": {
+    "search": "Search challans…",
+    "selectCustomer": "Select existing customer",
+    "customerName": "Customer name (e.g. John Doe)",
+    "challanNumber": "e.g. DC-001 (auto-generated if empty)"
+  },
+  "settings": {
+    "selectType": "Select type",
+    "gstNumber": "e.g., 22AAAAA0000A1Z5",
+    "phone": "+91 88888 88888",
+    "address": "Full business address",
+    "branchName": "e.g. Chh. Sambhaji Nagar",
+    "branchPhone": "+91 88888 88888",
+    "branchAddress": "Branch address"
+  },
+  "users": {
+    "search": "Search users…",
+    "email": "user@gmail.com",
+    "selectRole": "Select role"
+  },
+  "admin": {
+    "firmsSearch": "Search firms…",
+    "firmName": "Enter firm name",
+    "selectType": "Select type",
+    "gstNumber": "e.g., 22AAAAA0000A1Z5",
+    "phone": "+91 98765 43210",
+    "address": "Full business address",
+    "usersSearch": "Search users…",
+    "userEmail": "user@gmail.com",
+    "userName": "Full name",
+    "selectFirm": "Select firm",
+    "selectRole": "Select role",
+    "roleName": "e.g., Branch Manager",
+    "roleDesc": "Describe this role's responsibilities",
+    "activitySearch": "Search logs…"
+  },
+  "omniScale": {
+    "itemName": "Item name",
+    "selectScale": "Select Scale",
+    "percentage": "e.g. 50% for half, 200% for double"
+  },
+  "serverConfig": {
+    "vpsUrl": "https://firm.yourdomain.com or http://192.168.1.100:4000",
+    "year": "e.g. 2007"
+  }
+}

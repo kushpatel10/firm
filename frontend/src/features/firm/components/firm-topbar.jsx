@@ -28,30 +28,52 @@ import {
 } from "@/components/ui/sheet";
 
 export function FirmTopbar() {
-  const { user, role, logout } = useAuth();
+  const { user, firm, role, logout } = useAuth();
   const { isStealthEnabled, lock, isServerModalOpen, setIsServerModalOpen, isAndroidNative } = useStealth();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { toggleMobile } = useSidebar();
   const [notifOpen, setNotifOpen] = useState(false);
 
+  const firmName = firm?.name || "Firm Workspace";
+
   return (
-    <header className="sticky top-0 z-40 flex flex-col border-b border-border/70 bg-sidebar/95 backdrop-blur-md pt-safe">
-      <div className="flex h-13 sm:h-14 items-center justify-between px-3 sm:px-4 lg:px-6">
-        {/* Left side — Mobile Menu Toggle */}
-        <div className="flex items-center gap-2.5">
+    <header className="sticky top-0 z-40 flex flex-col border-b border-border/70 bg-card/90 backdrop-blur-2xl pt-safe shadow-xs">
+      <div className="flex h-14 sm:h-15 items-center justify-between px-3 sm:px-4 lg:px-6">
+        {/* Left side — Mobile Brand Identity (WhatsApp / Telegram style) */}
+        <div className="flex items-center gap-2.5 min-w-0">
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleMobile}
-            className="lg:hidden h-10 w-10 text-foreground hover:bg-secondary rounded-xl active:scale-95 transition-all"
+            className="lg:hidden h-10 w-10 text-foreground hover:bg-secondary rounded-xl active:scale-95 transition-all shrink-0"
             aria-label="Toggle navigation menu"
           >
             <Menu className="h-5 w-5" />
           </Button>
+
+          {/* Firm Avatar & Title — Visible on Mobile & Tablet */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="relative shrink-0">
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-primary to-blue-600 text-primary-foreground flex items-center justify-center font-bold text-xs shadow-sm">
+                {firmName.charAt(0).toUpperCase()}
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-card" />
+            </div>
+
+            <div className="min-w-0 flex flex-col">
+              <p className="text-sm font-bold tracking-tight text-foreground truncate max-w-[140px] sm:max-w-xs">
+                {firmName}
+              </p>
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="truncate">Live Cloud</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
 
           {/* Notifications */}
           <Sheet open={notifOpen} onOpenChange={setNotifOpen}>

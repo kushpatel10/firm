@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useState, useCallback } from "react";
 import { debounce } from "@/lib/utils";
+import { placeholders } from "@/config/placeholders";
 
 /**
  * Debounced search input.
@@ -12,7 +13,7 @@ import { debounce } from "@/lib/utils";
  * @param {Function} [props.onSearch]
  * @param {string} [props.className]
  */
-export function SearchInput({ placeholder = "Search…", onSearch, className }) {
+export function SearchInput({ placeholder = placeholders.common.search, onSearch, className }) {
   const [value, setValue] = useState("");
 
   const debouncedSearch = useCallback(

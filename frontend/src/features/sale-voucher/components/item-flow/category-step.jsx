@@ -1,19 +1,41 @@
 "use client";
 
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles, Plus, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function CategoryStep({ categories = [], selectedCategory, onSelectCategory, onContinue, loading = false }) {
+export function CategoryStep({
+  categories = [],
+  selectedCategory,
+  onSelectCategory,
+  onContinue,
+  onOpenCategoryManager,
+  loading = false,
+}) {
   return (
     <div className="flex flex-col h-full justify-between">
       <div className="space-y-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-            Select Category
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            What type of product are you selling?
-          </p>
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+              Select Category
+            </h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              What type of product are you selling?
+            </p>
+          </div>
+
+          {onOpenCategoryManager && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onOpenCategoryManager}
+              className="gap-1.5 text-xs h-8 rounded-xl font-medium shrink-0"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add Category
+            </Button>
+          )}
         </div>
 
         {loading ? (
@@ -23,8 +45,24 @@ export function CategoryStep({ categories = [], selectedCategory, onSelectCatego
             ))}
           </div>
         ) : categories.length === 0 ? (
-          <div className="p-8 text-center rounded-2xl border border-dashed border-border/80 bg-card/50">
-            <p className="text-sm text-muted-foreground">No product categories found.</p>
+          <div className="p-8 text-center rounded-2xl border-2 border-dashed border-border/80 bg-card/50 space-y-3 my-4">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
+              <Calculator className="h-5 w-5" />
+            </div>
+            <p className="text-sm font-semibold text-foreground">No Categories Configured Yet</p>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+              Preset categories have been cleared. Add custom categories with your own formulas, dimensions, and units.
+            </p>
+            {onOpenCategoryManager && (
+              <Button
+                type="button"
+                onClick={onOpenCategoryManager}
+                className="gap-2 text-xs font-semibold h-9 rounded-xl shadow-md shadow-primary/20"
+              >
+                <Plus className="h-4 w-4" />
+                Create Custom Category
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">

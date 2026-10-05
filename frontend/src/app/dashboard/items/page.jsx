@@ -18,12 +18,14 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Plus, Boxes, AlertTriangle, Loader2, Edit, Trash2, X, Tag,
-  Layers, Package, Check, ChevronDown, ChevronUp, Sparkles, SlidersHorizontal
+  Layers, Package, Check, ChevronDown, ChevronUp, Sparkles, SlidersHorizontal, Calculator
 } from "lucide-react";
 import { DEFAULT_UNITS } from "@/types/inventory.types";
 import { inventoryService } from "@/services/inventory.service";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
+import { placeholders } from "@/config/placeholders";
+import { CategoryManagerDialog } from "@/features/categories/components/category-manager-dialog";
 
 // Preset size catalogs for instant one-click addition
 const SIZE_PRESETS = [
@@ -56,6 +58,7 @@ export default function ItemsPage() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
   // Filters & Search
@@ -99,6 +102,19 @@ export default function ItemsPage() {
       setLoading(false);
     }
   }, [authLoading, firmId, loadItems]);
+
+  // Support action=new or action=categories from Quick Action FAB / Mobile menu
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("action") === "new") {
+        resetForm();
+        setAddDialogOpen(true);
+      } else if (params.get("action") === "categories") {
+        setCategoryDialogOpen(true);
+      }
+    }
+  }, []);
 
   // Unique categories
   const categories = useMemo(() => {
@@ -454,6 +470,14 @@ export default function ItemsPage() {
                 Stock Tracking
               </Button>
             </Link>
+            <Button
+              variant="outline"
+              className="gap-2 text-xs h-9 border-primary/30 text-primary hover:bg-primary/10"
+              onClick={() => setCategoryDialogOpen(true)}
+            >
+              <Calculator className="h-4 w-4" />
+              Categories & Formulas
+            </Button>
             <PermissionGate permission="Inventory.Create">
               <Button
                 className="gap-2 shadow-sm font-medium text-xs h-9"
@@ -533,7 +557,7 @@ export default function ItemsPage() {
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
         <div className="flex flex-1 flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
           <SearchInput
-            placeholder="Search items by name, SKU, or sizes…"
+            placeholder={placeholders.items.search}
             onSearch={setSearch}
             className="sm:w-80"
           />
@@ -541,7 +565,7 @@ export default function ItemsPage() {
           {categories.length > 0 && (
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="w-full sm:w-44 text-xs h-9">
-                <SelectValue placeholder="Category" />
+                <SelectValue placeholder={placeholders.items.categoryFilter} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Categories</SelectItem>
@@ -556,7 +580,7 @@ export default function ItemsPage() {
 
           <Select value={sizesFilter} onValueChange={setSizesFilter}>
             <SelectTrigger className="w-full sm:w-40 text-xs h-9">
-              <SelectValue placeholder="Sizes Filter" />
+              <SelectValue placeholder={placeholders.items.sizesFilter} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">All Items</SelectItem>
@@ -567,12 +591,40 @@ export default function ItemsPage() {
         </div>
       </div>
 
-      {/* Items Table */}
-      <DataTable
-        columns={columns}
-        data={filteredItems}
-        loading={loading}
-        emptyState={
+      {/* Desktop Table View */}
+      <div className="hidden md:block">
+        <DataTable
+          columns={columns}
+          data={filteredItems}
+          loading={loading}
+          emptyState={
+            <EmptyState
+              icon={<Boxes className="h-9 w-9 text-muted-foreground" />}
+              title="No items found"
+              description="Add your first item with custom sizes or dimensions to start using it in sales vouchers."
+              actionLabel="Add Item"
+              onAction={() => {
+                resetForm();
+                setAddDialogOpen(true);
+              }}
+            />
+          }
+        />
+      </div>
+
+      {/* Mobile Cards View (WhatsApp / Telegram style) */}
+      <div className="block md:hidden space-y-3">
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="border border-border/70 rounded-2xl p-4 bg-card animate-pulse space-y-2.5">
+                <div className="h-5 bg-muted rounded w-2/3"></div>
+                <div className="h-4 bg-muted rounded w-1/3"></div>
+                <div className="h-8 bg-muted rounded w-full"></div>
+              </div>
+            ))}
+          </div>
+        ) : filteredItems.length === 0 ? (
           <EmptyState
             icon={<Boxes className="h-9 w-9 text-muted-foreground" />}
             title="No items found"
@@ -583,8 +635,107 @@ export default function ItemsPage() {
               setAddDialogOpen(true);
             }}
           />
-        }
-      />
+        ) : (
+          filteredItems.map((item) => {
+            const isLowStock = (item.quantity ?? 0) <= (item.minStock ?? 5);
+            const sizesArr = Array.isArray(item.sizes) ? item.sizes : [];
+
+            return (
+              <div
+                key={item.id}
+                className="border border-border/80 rounded-2xl p-4 bg-card space-y-3 shadow-xs active:scale-[0.99] transition-all"
+              >
+                {/* Header row: Avatar + Name + SKU + Price */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20 shadow-xs">
+                      <Boxes className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 space-y-0.5">
+                      <h4 className="font-bold text-sm sm:text-base text-foreground truncate">
+                        {item.name}
+                      </h4>
+                      <div className="flex items-center gap-1.5 flex-wrap text-xs text-muted-foreground">
+                        {item.category && (
+                          <span className="font-medium text-foreground/80 bg-secondary px-2 py-0.5 rounded-md">
+                            {item.category}
+                          </span>
+                        )}
+                        {item.sku && <span className="font-mono text-[11px]">{item.sku}</span>}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <p className="font-bold text-base text-foreground font-mono">
+                      {formatCurrency(item.sellingPrice || 0)}
+                    </p>
+                    <span className="text-[11px] text-muted-foreground">/ {item.unit || "pcs"}</span>
+                  </div>
+                </div>
+
+                {/* Stock & Variants */}
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/50 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <span className={`inline-block h-2 w-2 rounded-full ${isLowStock ? "bg-amber-500" : "bg-emerald-500"}`} />
+                    <span className="text-muted-foreground font-medium">Stock:</span>
+                    <span className={`font-mono font-bold ${isLowStock ? "text-amber-600 dark:text-amber-400" : "text-foreground"}`}>
+                      {item.quantity ?? 0} {item.unit || "pcs"}
+                    </span>
+                  </div>
+
+                  {sizesArr.length > 0 && (
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-secondary text-foreground">
+                      {sizesArr.length} sizes
+                    </span>
+                  )}
+                </div>
+
+                {/* Sizes Chips Preview (if any) */}
+                {sizesArr.length > 0 && (
+                  <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                    {sizesArr.slice(0, 4).map((s, idx) => {
+                      const sName = typeof s === "string" ? s : s?.size;
+                      return (
+                        <span key={idx} className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/50">
+                          {sName}
+                        </span>
+                      );
+                    })}
+                    {sizesArr.length > 4 && (
+                      <span className="text-[10px] text-muted-foreground font-medium">
+                        +{sizesArr.length - 4} more
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs gap-1.5 rounded-xl font-medium"
+                    onClick={() => openEditDialog(item)}
+                  >
+                    <Edit className="h-3.5 w-3.5" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-xs gap-1.5 text-destructive hover:bg-destructive/10 rounded-xl"
+                    onClick={() => openDeleteDialog(item)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
 
       {/* Add / Edit Item Dialog */}
       <Dialog
@@ -617,7 +768,7 @@ export default function ItemsPage() {
                 </Label>
                 <Input
                   id="item-name"
-                  placeholder="e.g. Wooden Pallet, Cotton T-Shirt, Ceramic Tile"
+                  placeholder={placeholders.items.name}
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   required
@@ -630,7 +781,7 @@ export default function ItemsPage() {
                 </Label>
                 <Input
                   id="item-sku"
-                  placeholder="e.g. PL-001, TS-M-01"
+                  placeholder={placeholders.items.sku}
                   value={formSku}
                   onChange={(e) => setFormSku(e.target.value)}
                 />
@@ -642,7 +793,7 @@ export default function ItemsPage() {
                 </Label>
                 <Input
                   id="item-cat"
-                  placeholder="e.g. Pallets, Apparel, Tiles"
+                  placeholder={placeholders.items.category}
                   value={formCategory}
                   onChange={(e) => setFormCategory(e.target.value)}
                 />
@@ -674,7 +825,7 @@ export default function ItemsPage() {
                   id="item-sell-price"
                   type="number"
                   step="0.01"
-                  placeholder="0.00"
+                  placeholder={placeholders.items.sellingPrice}
                   value={formSellingPrice}
                   onChange={(e) => setFormSellingPrice(e.target.value)}
                   required
@@ -689,7 +840,7 @@ export default function ItemsPage() {
                   id="item-cost-price"
                   type="number"
                   step="0.01"
-                  placeholder="0.00"
+                  placeholder={placeholders.items.costPrice}
                   value={formPurchasePrice}
                   onChange={(e) => setFormPurchasePrice(e.target.value)}
                 />
@@ -785,7 +936,7 @@ export default function ItemsPage() {
                     </Label>
                     <div className="flex gap-2">
                       <Input
-                        placeholder="Type size and press Enter or Add…"
+                        placeholder={placeholders.items.customSize}
                         value={customSizeInput}
                         onChange={(e) => setCustomSizeInput(e.target.value)}
                         onKeyDown={(e) => {
@@ -937,6 +1088,14 @@ export default function ItemsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Category & Formula Manager Modal */}
+      <CategoryManagerDialog
+        isOpen={categoryDialogOpen}
+        onClose={() => setCategoryDialogOpen(false)}
+        firmId={firmId}
+        onCategoriesUpdated={loadItems}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/utils";
+import { placeholders } from "@/config/placeholders";
 
 export function VoucherSummary({
   partyMode,
@@ -146,7 +147,7 @@ export function VoucherSummary({
                 type="number"
                 min="0"
                 step="any"
-                placeholder="0"
+                placeholder={placeholders.common.zero}
                 value={discount}
                 onChange={(e) => setDiscount(e.target.value)}
                 className="h-9 text-xs font-mono font-medium rounded-lg bg-background"
@@ -162,7 +163,7 @@ export function VoucherSummary({
                 type="number"
                 min="0"
                 step="any"
-                placeholder="0"
+                placeholder={placeholders.common.zero}
                 value={tax}
                 onChange={(e) => setTax(e.target.value)}
                 className="h-9 text-xs font-mono font-medium rounded-lg bg-background"

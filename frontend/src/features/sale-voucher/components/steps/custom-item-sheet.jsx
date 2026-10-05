@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/lib/utils";
+import { placeholders } from "@/config/placeholders";
 
 export function CustomItemSheet({ isOpen, onClose, onAddCustomItem }) {
   const [name, setName] = useState("");
@@ -90,7 +91,7 @@ export function CustomItemSheet({ isOpen, onClose, onAddCustomItem }) {
             </Label>
             <Input
               id="customName"
-              placeholder="e.g. Iron Rod 12mm / Custom Fitting"
+              placeholder={placeholders.sales.customItemName}
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -106,7 +107,7 @@ export function CustomItemSheet({ isOpen, onClose, onAddCustomItem }) {
               </Label>
               <Input
                 id="customSize"
-                placeholder="e.g. 10 ft, XL"
+                placeholder={placeholders.sales.customItemSize}
                 value={size}
                 onChange={(e) => setSize(e.target.value)}
                 className="h-11 rounded-xl bg-card border-border/80 text-sm"
@@ -119,7 +120,7 @@ export function CustomItemSheet({ isOpen, onClose, onAddCustomItem }) {
               </Label>
               <Input
                 id="customUnit"
-                placeholder="e.g. pcs, kg, mtr"
+                placeholder={placeholders.sales.customItemUnit}
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
                 className="h-11 rounded-xl bg-card border-border/80 text-sm"
@@ -152,7 +153,7 @@ export function CustomItemSheet({ isOpen, onClose, onAddCustomItem }) {
                 type="number"
                 step="any"
                 min="0"
-                placeholder="0"
+                placeholder={placeholders.common.zero}
                 value={unitPrice}
                 onChange={(e) => setUnitPrice(e.target.value)}
                 required
@@ -167,7 +168,7 @@ export function CustomItemSheet({ isOpen, onClose, onAddCustomItem }) {
             </Label>
             <Textarea
               id="customDesc"
-              placeholder="Add specific instructions, material details, etc."
+              placeholder={placeholders.sales.customItemInstructions}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}

@@ -17,6 +17,7 @@ export function ItemFlowModal({
   categories = [],
   initialItem = null,
   onAddItem,
+  onOpenCategoryManager,
   loading = false,
 }) {
   const {
@@ -125,6 +126,7 @@ export function ItemFlowModal({
               selectedCategory={selectedCategory}
               onSelectCategory={handleSelectCategory}
               onContinue={goNext}
+              onOpenCategoryManager={onOpenCategoryManager}
               loading={loading}
             />
           )}

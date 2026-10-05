@@ -22,6 +22,7 @@ import { firmService } from "@/services/firm.service";
 import { branchService } from "@/services/branch.service";
 import { Loader2, Plus, Building } from "lucide-react";
 import { toast } from "sonner";
+import { placeholders } from "@/config/placeholders";
 
 export default function SettingsPage() {
   const { firm, loading: authLoading } = useAuth();
@@ -165,7 +166,7 @@ export default function SettingsPage() {
                   <div className="space-y-2">
                     <Label>Business Type</Label>
                     <Select value={businessType} onValueChange={setBusinessType}>
-                      <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={placeholders.settings.selectType} /></SelectTrigger>
                       <SelectContent>
                         {BUSINESS_TYPES.map((t) => (<SelectItem key={t} value={t}>{t}</SelectItem>))}
                       </SelectContent>
@@ -173,11 +174,11 @@ export default function SettingsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label>GST Number</Label>
-                    <Input value={gstNumber} onChange={(e) => setGstNumber(e.target.value)} placeholder="e.g., 22AAAAA0000A1Z5" />
+                    <Input value={gstNumber} onChange={(e) => setGstNumber(e.target.value)} placeholder={placeholders.settings.gstNumber} />
                   </div>
                   <div className="space-y-2">
                     <Label>Phone</Label>
-                    <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 98765 43210" />
+                    <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={placeholders.settings.phone} />
                   </div>
                   <div className="space-y-2">
                     <Label>Currency</Label>
@@ -200,7 +201,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Address</Label>
-                  <Textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Full business address" rows={2} />
+                  <Textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder={placeholders.settings.address} rows={2} />
                 </div>
                 <Separator />
                 <PermissionGate permission="Settings.Manage">
@@ -276,7 +277,7 @@ export default function SettingsPage() {
               <Label htmlFor="branchName">Branch Name *</Label>
               <Input
                 id="branchName"
-                placeholder="e.g. Pune Central Branch"
+                placeholder={placeholders.settings.branchName}
                 value={branchName}
                 onChange={(e) => setBranchName(e.target.value)}
                 required
@@ -286,7 +287,7 @@ export default function SettingsPage() {
               <Label htmlFor="branchPhone">Phone Number</Label>
               <Input
                 id="branchPhone"
-                placeholder="+91 98765 43210"
+                placeholder={placeholders.settings.branchPhone}
                 value={branchPhone}
                 onChange={(e) => setBranchPhone(e.target.value)}
               />
@@ -295,7 +296,7 @@ export default function SettingsPage() {
               <Label htmlFor="branchAddress">Address</Label>
               <Textarea
                 id="branchAddress"
-                placeholder="Branch address"
+                placeholder={placeholders.settings.branchAddress}
                 rows={2}
                 value={branchAddress}
                 onChange={(e) => setBranchAddress(e.target.value)}

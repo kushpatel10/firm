@@ -18,6 +18,7 @@ import { customerService } from "@/services/customer.service";
 import { useAuth } from "@/contexts/auth-context";
 import { formatDate } from "@/lib/utils";
 import { toast } from "sonner";
+import { placeholders } from "@/config/placeholders";
 
 export default function DeliveryChallansPage() {
   const { firm, loading: authLoading } = useAuth();
@@ -105,7 +106,7 @@ export default function DeliveryChallansPage() {
         }
       />
 
-      <SearchInput placeholder="Search challans…" onSearch={setSearch} className="sm:w-80" />
+      <SearchInput placeholder={placeholders.deliveryChallans.search} onSearch={setSearch} className="sm:w-80" />
 
       <DataTable
         columns={columns}
@@ -135,8 +136,8 @@ export default function DeliveryChallansPage() {
               {customers.length > 0 ? (
                 <Select value={customerId} onValueChange={setCustomerId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select existing customer">
-                      {customers.find((c) => c.id === customerId)?.name || customerName || "Select existing customer"}
+                    <SelectValue placeholder={placeholders.deliveryChallans.selectCustomer}>
+                      {customers.find((c) => c.id === customerId)?.name || customerName || placeholders.deliveryChallans.selectCustomer}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -147,7 +148,7 @@ export default function DeliveryChallansPage() {
                 </Select>
               ) : (
                 <Input
-                  placeholder="Customer name (e.g. John Doe)"
+                  placeholder={placeholders.deliveryChallans.customerName}
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                 />
@@ -157,7 +158,7 @@ export default function DeliveryChallansPage() {
               <Label htmlFor="challanNo">Challan Number</Label>
               <Input
                 id="challanNo"
-                placeholder="e.g. DC-001 (auto-generated if empty)"
+                placeholder={placeholders.deliveryChallans.challanNumber}
                 value={challanNumber}
                 onChange={(e) => setChallanNumber(e.target.value)}
               />

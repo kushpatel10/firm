@@ -11,6 +11,7 @@ import { Boxes, Plus, X, Loader2, Sparkles, Layers } from "lucide-react";
 import { DEFAULT_UNITS } from "@/types/inventory.types";
 import { inventoryService } from "@/services/inventory.service";
 import { toast } from "sonner";
+import { placeholders } from "@/config/placeholders";
 
 const QUICK_PRESETS = [
   { label: "Apparel", sizes: ["S", "M", "L", "XL", "XXL"] },
@@ -104,7 +105,7 @@ export function QuickAddItemDialog({
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Item Name *</Label>
             <Input
-              placeholder="e.g. Wooden Pallet, Formal Shirt"
+              placeholder={placeholders.items.quickAddName}
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -116,7 +117,7 @@ export function QuickAddItemDialog({
             <div className="space-y-1.5">
               <Label className="text-xs">Category</Label>
               <Input
-                placeholder="e.g. Pallets, Apparel"
+                placeholder={placeholders.items.quickAddCategory}
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="text-xs"
@@ -144,7 +145,7 @@ export function QuickAddItemDialog({
             <Input
               type="number"
               step="0.01"
-              placeholder="0.00"
+              placeholder={placeholders.items.sellingPrice}
               value={sellingPrice}
               onChange={(e) => setSellingPrice(e.target.value)}
               required
@@ -191,7 +192,7 @@ export function QuickAddItemDialog({
 
                 <div className="flex gap-1.5">
                   <Input
-                    placeholder="Custom size (e.g. 950x1120, XL)…"
+                    placeholder={placeholders.items.customSizeExample}
                     value={customSizeInput}
                     onChange={(e) => setCustomSizeInput(e.target.value)}
                     onKeyDown={(e) => {

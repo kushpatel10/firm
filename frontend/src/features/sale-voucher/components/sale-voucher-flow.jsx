@@ -14,106 +14,7 @@ import { VoucherSummary } from "./steps/voucher-summary";
 import { VoucherSuccess } from "./steps/voucher-success";
 import { ItemFlowModal } from "./item-flow/item-flow-modal";
 import { CustomItemSheet } from "./steps/custom-item-sheet";
-
-const DEFAULT_FALLBACK_CATEGORIES = [
-  {
-    id: "cat_doors",
-    name: "Doors",
-    icon: "🚪",
-    description: "Flush Doors, Teak Doors, and custom architectural doors",
-    hasSubtypes: true,
-    formula: "(LENGTH * WIDTH) / 144",
-    calculationLabel: "Square Feet",
-    rateLabel: "Rate per sq.ft",
-    unit: "sq.ft",
-    sortOrder: 1,
-    subtypes: [
-      { id: "st_flush", name: "Flush Door", description: "Solid core flush door with standard laminate base", defaultRate: 250 },
-      { id: "st_teak", name: "Teak Door", description: "Premium natural teak wood carved / panel door", defaultRate: 450 },
-      { id: "st_other", name: "Other", description: "Custom membrane, pine, or molded panel door", defaultRate: 300 },
-    ],
-    dimensions: [
-      { id: "dim_len", key: "length", label: "Length", unit: "inch", type: "NUMBER", required: true, defaultValue: 84, sortOrder: 1 },
-      { id: "dim_wid", key: "width", label: "Width", unit: "inch", type: "NUMBER", required: true, defaultValue: 36, sortOrder: 2 },
-      { id: "dim_qty", key: "quantity", label: "Quantity", unit: "piece", type: "NUMBER", required: true, defaultValue: 2, sortOrder: 3 },
-    ],
-    sizePresets: [
-      { id: "sp_30", name: "30 mm", standardRate: 250 },
-      { id: "sp_35", name: "35 mm", standardRate: 280 },
-    ],
-    pricingRules: [
-      {
-        formula: "(LENGTH * WIDTH) / 144",
-        formulaExplanation: "Square Feet = (Length × Width) / 144",
-        rounding: "ROUND_HALF_UP",
-        decimalPlaces: 2,
-        isActive: true,
-      },
-    ],
-  },
-  {
-    id: "cat_windows",
-    name: "Windows",
-    icon: "🪟",
-    description: "Aluminium, UPVC, and sliding window sections",
-    hasSubtypes: true,
-    formula: "(LENGTH * WIDTH) / 144",
-    calculationLabel: "Square Feet",
-    rateLabel: "Rate per sq.ft",
-    unit: "sq.ft",
-    sortOrder: 2,
-    subtypes: [
-      { id: "st_alum", name: "Aluminium Window", defaultRate: 320 },
-      { id: "st_upvc", name: "UPVC Window", defaultRate: 480 },
-      { id: "st_slid", name: "Sliding Window", defaultRate: 360 },
-    ],
-    dimensions: [
-      { id: "dim_wlen", key: "length", label: "Length (Height)", unit: "inch", type: "NUMBER", required: true, defaultValue: 48, sortOrder: 1 },
-      { id: "dim_wwid", key: "width", label: "Width", unit: "inch", type: "NUMBER", required: true, defaultValue: 48, sortOrder: 2 },
-      { id: "dim_wqty", key: "quantity", label: "Quantity", unit: "piece", type: "NUMBER", required: true, defaultValue: 1, sortOrder: 3 },
-    ],
-    sizePresets: [
-      { id: "sp_2t", name: "2 Track", standardRate: 320 },
-      { id: "sp_3t", name: "3 Track", standardRate: 380 },
-    ],
-    pricingRules: [
-      {
-        formula: "(LENGTH * WIDTH) / 144",
-        rounding: "ROUND_HALF_UP",
-        decimalPlaces: 2,
-        isActive: true,
-      },
-    ],
-  },
-  {
-    id: "cat_furniture",
-    name: "Furniture",
-    icon: "🛋️",
-    description: "Standard unit-priced ready or custom modular furniture",
-    hasSubtypes: false,
-    formula: "QUANTITY * RATE",
-    calculationLabel: "Units",
-    rateLabel: "Rate per item",
-    unit: "piece",
-    sortOrder: 3,
-    subtypes: [],
-    dimensions: [
-      { id: "dim_fqty", key: "quantity", label: "Quantity", unit: "piece", type: "NUMBER", required: true, defaultValue: 1, sortOrder: 1 },
-    ],
-    sizePresets: [
-      { id: "sp_std", name: "Standard", standardRate: 1500 },
-      { id: "sp_lrg", name: "Large", standardRate: 2500 },
-    ],
-    pricingRules: [
-      {
-        formula: "QUANTITY * RATE",
-        rounding: "ROUND_HALF_UP",
-        decimalPlaces: 2,
-        isActive: true,
-      },
-    ],
-  },
-];
+import { CategoryManagerDialog } from "@/features/categories/components/category-manager-dialog";
 
 export function SaleVoucherFlow({
   isOpen,
@@ -124,36 +25,37 @@ export function SaleVoucherFlow({
   onSaveVoucher,
   onViewInvoice,
 }) {
-  // Categories from database
-  const [categories, setCategories] = useState(DEFAULT_FALLBACK_CATEGORIES);
+  // Configured catalog categories from database (no hardcoded presets)
+  const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
 
   // Sub-modal states
   const [catalogModalOpen, setCatalogModalOpen] = useState(false);
   const [customSheetOpen, setCustomSheetOpen] = useState(false);
+  const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
   const [editingItemInfo, setEditingItemInfo] = useState(null); // { item, index }
 
   // Fetch categories for this firm from backend API
+  const loadCategories = () => {
+    const targetFirmId = firmId || "dev-firm-001";
+    setLoadingCategories(true);
+    categoryService
+      .getAll(targetFirmId)
+      .then((data) => {
+        setCategories(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        console.warn("Backend categories unavailable:", err);
+        setCategories([]);
+      })
+      .finally(() => {
+        setLoadingCategories(false);
+      });
+  };
+
   useEffect(() => {
     if (isOpen) {
-      const targetFirmId = firmId || "dev-firm-001";
-      setLoadingCategories(true);
-      categoryService
-        .getAll(targetFirmId)
-        .then((data) => {
-          if (Array.isArray(data) && data.length > 0) {
-            setCategories(data);
-          } else {
-            setCategories(DEFAULT_FALLBACK_CATEGORIES);
-          }
-        })
-        .catch((err) => {
-          console.warn("Backend categories unavailable, using default catalog:", err);
-          setCategories(DEFAULT_FALLBACK_CATEGORIES);
-        })
-        .finally(() => {
-          setLoadingCategories(false);
-        });
+      loadCategories();
     }
   }, [isOpen, firmId]);
 
@@ -484,6 +386,7 @@ export function SaleVoucherFlow({
         categories={categories}
         initialItem={editingItemInfo?.item || null}
         onAddItem={handleItemFlowComplete}
+        onOpenCategoryManager={() => setCategoryManagerOpen(true)}
         loading={loadingCategories}
       />
 
@@ -502,6 +405,14 @@ export function SaleVoucherFlow({
             addItem(customItem);
           }
         }}
+      />
+
+      {/* Category & Formula Manager Modal */}
+      <CategoryManagerDialog
+        isOpen={categoryManagerOpen}
+        onClose={() => setCategoryManagerOpen(false)}
+        firmId={firmId || "dev-firm-001"}
+        onCategoriesUpdated={loadCategories}
       />
     </div>
   );

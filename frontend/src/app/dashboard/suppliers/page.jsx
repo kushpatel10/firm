@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Truck, Loader2, Edit, Trash2 } from "lucide-react";
 import { supplierService } from "@/services/supplier.service";
 import { toast } from "sonner";
+import { placeholders } from "@/config/placeholders";
 
 export default function SuppliersPage() {
   const { firm, loading: authLoading } = useAuth();
@@ -206,7 +207,7 @@ export default function SuppliersPage() {
         }
       />
 
-      <SearchInput placeholder="Search supplier name, phone, or email…" onSearch={setSearch} className="sm:w-80" />
+      <SearchInput placeholder={placeholders.suppliers.search} onSearch={setSearch} className="sm:w-80" />
 
       <DataTable
         columns={columns}
@@ -235,7 +236,7 @@ export default function SuppliersPage() {
               <Label htmlFor="name">Supplier / Vendor Name *</Label>
               <Input
                 id="name"
-                placeholder="Business or Vendor Name"
+                placeholder={placeholders.suppliers.name}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -245,7 +246,7 @@ export default function SuppliersPage() {
               <Label htmlFor="phone">Phone Number</Label>
               <Input
                 id="phone"
-                placeholder="+91 98765 43210"
+                placeholder={placeholders.suppliers.phone}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
@@ -255,7 +256,7 @@ export default function SuppliersPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="supplier@example.com"
+                placeholder={placeholders.suppliers.email}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -264,7 +265,7 @@ export default function SuppliersPage() {
               <Label htmlFor="address">Address</Label>
               <Textarea
                 id="address"
-                placeholder="Full address"
+                placeholder={placeholders.suppliers.address}
                 rows={2}
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}

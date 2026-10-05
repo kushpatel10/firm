@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { placeholders } from "@/config/placeholders";
 
 export function InvoiceStep({
   invoiceNumber,
@@ -37,7 +38,7 @@ export function InvoiceStep({
             <Hash className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
             <Input
               id="invNumberInput"
-              placeholder="Auto-generated if empty (e.g. INV-0001)"
+              placeholder={placeholders.sales.invoiceNumber}
               value={invoiceNumber}
               onChange={(e) => setInvoiceNumber(e.target.value)}
               className="h-12 pl-10 rounded-xl bg-card border-border/80 font-mono text-sm"
@@ -103,7 +104,7 @@ export function InvoiceStep({
           </Label>
           <Textarea
             id="voucherNotes"
-            placeholder="Add delivery terms, site notes, vehicle #, or reference"
+            placeholder={placeholders.sales.voucherNotes}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}

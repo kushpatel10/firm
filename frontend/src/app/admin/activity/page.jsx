@@ -11,6 +11,7 @@ import { Activity } from "lucide-react";
 import { ACTIVITY_ACTIONS } from "@/types/activity.types";
 import { activityService } from "@/services/activity.service";
 import { toast } from "sonner";
+import { placeholders } from "@/config/placeholders";
 
 export default function ActivityPage() {
   const [logs, setLogs] = useState([]);
@@ -76,7 +77,7 @@ export default function ActivityPage() {
       />
 
       <div className="flex flex-col sm:flex-row gap-3">
-        <SearchInput placeholder="Search logs…" onSearch={setSearch} className="sm:w-80" />
+        <SearchInput placeholder={placeholders.admin.activitySearch} onSearch={setSearch} className="sm:w-80" />
         <FilterDropdown
           label="Action"
           options={Object.values(ACTIVITY_ACTIONS).map((a) => ({

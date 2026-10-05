@@ -25,7 +25,7 @@ export function StatsCard({
           {title}
         </span>
         {icon && (
-          <div className="flex h-8 w-8 sm:h-8.5 sm:w-8.5 items-center justify-center rounded-xl bg-secondary/90 border border-border/70 text-muted-foreground transition-colors group-hover:text-foreground shrink-0">
+          <div className="flex h-8.5 w-8.5 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary transition-all duration-200 group-hover:scale-105 shrink-0 shadow-xs">
             {icon}
           </div>
         )}

@@ -21,6 +21,7 @@ import {
 import { UserPlus, Users, Loader2 } from "lucide-react";
 import { userService } from "@/services/user.service";
 import { toast } from "sonner";
+import { placeholders } from "@/config/placeholders";
 
 export default function FirmUsersPage() {
   const { firm, loading: authLoading } = useAuth();
@@ -114,7 +115,7 @@ export default function FirmUsersPage() {
         }
       />
 
-      <SearchInput placeholder="Search users…" onSearch={setSearch} className="sm:w-80" />
+      <SearchInput placeholder={placeholders.users.search} onSearch={setSearch} className="sm:w-80" />
 
       <DataTable
         columns={columns}
@@ -145,7 +146,7 @@ export default function FirmUsersPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="user@gmail.com"
+                placeholder={placeholders.users.email}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -154,7 +155,7 @@ export default function FirmUsersPage() {
             <div className="space-y-2">
               <Label htmlFor="role">Role *</Label>
               <Select value={roleName} onValueChange={setRoleName} required>
-                <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={placeholders.users.selectRole} /></SelectTrigger>
                 <SelectContent>
                   {["Owner", "Manager", "Accountant", "Sales", "Inventory", "Staff"].map((r) => (
                     <SelectItem key={r} value={r}>{r}</SelectItem>

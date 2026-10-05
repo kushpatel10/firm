@@ -74,9 +74,9 @@ export function useItemFlow({ categories = [], initialItem = null, onComplete, o
     });
     setDimensionValues(initialDims);
 
-    // Default rate
+    // Default rate from category or subtype
     const defaultSubtype = category.subtypes?.[0];
-    const defaultRate = defaultSubtype?.defaultRate ?? 250;
+    const defaultRate = defaultSubtype?.defaultRate ?? "";
     setRate(defaultRate);
     setQuantity(initialDims.quantity || 1);
   }, [selectedCategory]);

@@ -30,6 +30,7 @@ import { Plus, Building2, Loader2 } from "lucide-react";
 import { BUSINESS_TYPES, CURRENCIES, TIMEZONES, FIRM_STATUS } from "@/types/firm.types";
 import { firmService } from "@/services/firm.service";
 import { toast } from "sonner";
+import { placeholders } from "@/config/placeholders";
 
 export default function FirmsPage() {
   const [firms, setFirms] = useState([]);
@@ -134,7 +135,7 @@ export default function FirmsPage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <SearchInput
-          placeholder="Search firms…"
+          placeholder={placeholders.admin.firmsSearch}
           onSearch={setSearch}
           className="sm:w-80"
         />
@@ -180,7 +181,7 @@ export default function FirmsPage() {
                 <Label htmlFor="name">Firm Name *</Label>
                 <Input
                   id="name"
-                  placeholder="Enter firm name"
+                  placeholder={placeholders.admin.firmName}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -189,7 +190,7 @@ export default function FirmsPage() {
               <div className="space-y-2">
                 <Label htmlFor="businessType">Business Type *</Label>
                 <Select value={businessType} onValueChange={setBusinessType} required>
-                  <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={placeholders.admin.selectType} /></SelectTrigger>
                   <SelectContent>
                     {BUSINESS_TYPES.map((t) => (
                       <SelectItem key={t} value={t}>{t}</SelectItem>
@@ -201,7 +202,7 @@ export default function FirmsPage() {
                 <Label htmlFor="gstNumber">GST Number</Label>
                 <Input
                   id="gstNumber"
-                  placeholder="e.g., 22AAAAA0000A1Z5"
+                  placeholder={placeholders.admin.gstNumber}
                   value={gstNumber}
                   onChange={(e) => setGstNumber(e.target.value)}
                 />
@@ -210,7 +211,7 @@ export default function FirmsPage() {
                 <Label htmlFor="phone">Phone</Label>
                 <Input
                   id="phone"
-                  placeholder="+91 98765 43210"
+                  placeholder={placeholders.admin.phone}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                 />
@@ -244,7 +245,7 @@ export default function FirmsPage() {
               <Label htmlFor="address">Address</Label>
               <Textarea
                 id="address"
-                placeholder="Full business address"
+                placeholder={placeholders.admin.address}
                 rows={2}
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
