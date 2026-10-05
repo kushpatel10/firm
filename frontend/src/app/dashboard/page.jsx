@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import {
   ShoppingCart, ShoppingBag, Receipt, Package,
   TrendingUp, Activity, Loader2, ArrowUpRight, Plus,
-  FileText, Scale, ArrowRight
+  FileText, ArrowRight
 } from "lucide-react";
 import { dashboardService } from "@/services/dashboard.service";
 import { useAuth } from "@/contexts/auth-context";
@@ -109,15 +109,6 @@ export default function FirmDashboard() {
             <Receipt className="h-3.5 w-3.5" />
           </div>
           <span>Expenses</span>
-        </Link>
-        <Link
-          href="/dashboard/omni-scale"
-          className="inline-flex items-center gap-2 rounded-2xl border border-border/80 bg-card px-3.5 py-2 text-xs sm:text-[13px] font-semibold text-foreground hover:bg-purple-500/10 hover:border-purple-500/40 hover:text-purple-600 transition-all shrink-0 active:scale-95 min-h-[40px] shadow-xs"
-        >
-          <div className="h-6 w-6 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-            <Scale className="h-3.5 w-3.5" />
-          </div>
-          <span>Omni Scale</span>
         </Link>
       </div>
 

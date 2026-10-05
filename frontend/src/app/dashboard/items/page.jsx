@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Plus, Boxes, AlertTriangle, Loader2, Edit, Trash2, X, Tag,
+  Plus, AlertTriangle, Loader2, Edit, Trash2, X, Tag,
   Layers, Package, Check, ChevronDown, ChevronUp, Sparkles, SlidersHorizontal, Calculator
 } from "lucide-react";
 import { DEFAULT_UNITS } from "@/types/inventory.types";
@@ -514,7 +514,7 @@ export default function ItemsPage() {
               </p>
             </div>
             <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-              <Boxes className="h-4 w-4" />
+              <Layers className="h-4 w-4" />
             </div>
           </CardContent>
         </Card>
@@ -608,7 +608,7 @@ export default function ItemsPage() {
           loading={loading}
           emptyState={
             <EmptyState
-              icon={<Boxes className="h-9 w-9 text-muted-foreground" />}
+              icon={<Layers className="h-9 w-9 text-muted-foreground" />}
               title="No items found"
               description="Add your first item with custom sizes or dimensions to start using it in sales vouchers."
               actionLabel="Add Item"
@@ -635,7 +635,7 @@ export default function ItemsPage() {
           </div>
         ) : filteredItems.length === 0 ? (
           <EmptyState
-            icon={<Boxes className="h-9 w-9 text-muted-foreground" />}
+            icon={<Layers className="h-9 w-9 text-muted-foreground" />}
             title="No items found"
             description="Add your first item with custom sizes or dimensions to start using it in sales vouchers."
             actionLabel="Add Item"
@@ -658,7 +658,7 @@ export default function ItemsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 min-w-0">
                     <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20 shadow-xs">
-                      <Boxes className="h-5 w-5" />
+                      <Layers className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 space-y-0.5">
                       <h4 className="font-bold text-sm sm:text-base text-foreground truncate">
@@ -764,7 +764,7 @@ export default function ItemsPage() {
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto p-5 sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg font-bold">
-              <Boxes className="h-5 w-5 text-primary" />
+              <Layers className="h-5 w-5 text-primary" />
               {editDialogOpen ? "Edit Item" : "Add New Item"}
             </DialogTitle>
             <DialogDescription className="text-xs">

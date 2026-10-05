@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { X, Plus, Tag } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Plus, Tag, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,13 +9,53 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/lib/utils";
 import { placeholders } from "@/config/placeholders";
 
-export function CustomItemSheet({ isOpen, onClose, onAddCustomItem }) {
-  const [name, setName] = useState("");
-  const [size, setSize] = useState("");
-  const [description, setDescription] = useState("");
-  const [quantity, setQuantity] = useState("1");
-  const [unit, setUnit] = useState("pcs");
-  const [unitPrice, setUnitPrice] = useState("");
+export function CustomItemSheet({ isOpen, onClose, onAddCustomItem, initialItem = null }) {
+  const [name, setName] = useState(() => initialItem?.name || "");
+  const [length, setLength] = useState(() => {
+    let dims = initialItem?.dimensions;
+    if (typeof dims === "string") {
+      try { dims = JSON.parse(dims); } catch (_) {}
+    }
+    return String(dims?.length ?? dims?.l ?? "");
+  });
+  const [breadth, setBreadth] = useState(() => {
+    let dims = initialItem?.dimensions;
+    if (typeof dims === "string") {
+      try { dims = JSON.parse(dims); } catch (_) {}
+    }
+    return String(dims?.breadth ?? dims?.b ?? dims?.width ?? dims?.w ?? "");
+  });
+  const [size, setSize] = useState(() => initialItem?.size || "");
+  const [description, setDescription] = useState(() => initialItem?.description || "");
+  const [quantity, setQuantity] = useState(() => String(initialItem?.quantity || "1"));
+  const [unit, setUnit] = useState(() => initialItem?.unit || "pcs");
+  const [unitPrice, setUnitPrice] = useState(() => String(initialItem?.unitPrice ?? initialItem?.rate ?? ""));
+
+  useEffect(() => {
+    if (initialItem) {
+      setName(initialItem.name || "");
+      let dims = initialItem.dimensions;
+      if (typeof dims === "string") {
+        try { dims = JSON.parse(dims); } catch (_) {}
+      }
+      setLength(String(dims?.length ?? dims?.l ?? ""));
+      setBreadth(String(dims?.breadth ?? dims?.b ?? dims?.width ?? dims?.w ?? ""));
+      setSize(initialItem.size || "");
+      setDescription(initialItem.description || "");
+      setQuantity(String(initialItem.quantity || "1"));
+      setUnit(initialItem.unit || "pcs");
+      setUnitPrice(String(initialItem.unitPrice ?? initialItem.rate ?? ""));
+    } else {
+      setName("");
+      setLength("");
+      setBreadth("");
+      setSize("");
+      setDescription("");
+      setQuantity("1");
+      setUnit("pcs");
+      setUnitPrice("");
+    }
+  }, [initialItem, isOpen]);
 
   if (!isOpen) return null;
 
@@ -25,12 +65,27 @@ export function CustomItemSheet({ isOpen, onClose, onAddCustomItem }) {
 
   const handleAdd = (e) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    const hasDims = Boolean(length.trim() || breadth.trim());
+    const dimsObj = hasDims ? {
+      length: length.trim() ? (parseFloat(length) || length.trim()) : null,
+      breadth: breadth.trim() ? (parseFloat(breadth) || breadth.trim()) : null,
+      width: breadth.trim() ? (parseFloat(breadth) || breadth.trim()) : null,
+      unit: unit.trim() || "inch",
+    } : null;
+
+    let finalSize = size.trim();
+    if (!finalSize && hasDims) {
+      if (length.trim() && breadth.trim()) {
+        finalSize = `${length.trim()} × ${breadth.trim()}`;
+      } else {
+        finalSize = length.trim() || breadth.trim();
+      }
+    }
 
     onAddCustomItem({
-      id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      id: initialItem?.id || `custom_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
       name: name.trim(),
-      size: size.trim() || null,
+      size: finalSize || null,
       description: description.trim() || null,
       quantity: qtyNum,
       unit: unit.trim() || "pcs",
@@ -38,12 +93,13 @@ export function CustomItemSheet({ isOpen, onClose, onAddCustomItem }) {
       total: lineTotal,
       isCustom: true,
       category: "Custom Item",
-      dimensions: null,
+      dimensions: dimsObj,
       formula: null,
       snapshot: {
         isCustom: true,
         name: name.trim(),
-        size: size.trim() || null,
+        size: finalSize || null,
+        dimensions: dimsObj,
         description: description.trim() || null,
         quantity: qtyNum,
         unit: unit.trim() || "pcs",
@@ -66,10 +122,10 @@ export function CustomItemSheet({ isOpen, onClose, onAddCustomItem }) {
             </span>
             <div>
               <h1 className="text-base font-bold text-foreground">
-                Add Custom Item
+                {initialItem ? "Edit Custom Item" : "Add Custom Item"}
               </h1>
               <p className="text-[11px] text-muted-foreground">
-                Direct item entry for this voucher
+                {initialItem ? "Update item specifications for this voucher" : "Direct item entry for this voucher"}
               </p>
             </div>
           </div>
@@ -100,6 +156,39 @@ export function CustomItemSheet({ isOpen, onClose, onAddCustomItem }) {
             />
           </div>
 
+          {/* Length & Breadth / Width Inputs */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="customLength" className="text-xs font-semibold">
+                Length (Optional)
+              </Label>
+              <Input
+                id="customLength"
+                type="number"
+                step="any"
+                placeholder="e.g. 84"
+                value={length}
+                onChange={(e) => setLength(e.target.value)}
+                className="h-11 rounded-xl bg-card border-border/80 text-sm font-mono"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="customBreadth" className="text-xs font-semibold">
+                Breadth / Width (Optional)
+              </Label>
+              <Input
+                id="customBreadth"
+                type="number"
+                step="any"
+                placeholder="e.g. 36"
+                value={breadth}
+                onChange={(e) => setBreadth(e.target.value)}
+                className="h-11 rounded-xl bg-card border-border/80 text-sm font-mono"
+              />
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="customSize" className="text-xs font-semibold">
@@ -107,7 +196,7 @@ export function CustomItemSheet({ isOpen, onClose, onAddCustomItem }) {
               </Label>
               <Input
                 id="customSize"
-                placeholder={placeholders.sales.customItemSize}
+                placeholder="e.g. 18mm, Commercial..."
                 value={size}
                 onChange={(e) => setSize(e.target.value)}
                 className="h-11 rounded-xl bg-card border-border/80 text-sm"
@@ -194,7 +283,15 @@ export function CustomItemSheet({ isOpen, onClose, onAddCustomItem }) {
               disabled={!name.trim() || priceNum <= 0}
               className="w-full h-12 text-base font-semibold rounded-2xl shadow-lg shadow-primary/20 gap-2 cursor-pointer"
             >
-              <Plus className="h-4 w-4 stroke-[3]" /> Add to Voucher
+              {initialItem ? (
+                <>
+                  <Edit className="h-4 w-4" /> Update Item
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 stroke-[3]" /> Add to Voucher
+                </>
+              )}
             </Button>
           </div>
         </form>

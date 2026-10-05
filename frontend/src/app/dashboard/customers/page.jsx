@@ -318,24 +318,15 @@ export default function CustomersPage() {
                   </div>
                 )}
 
-                {/* Quick Action Buttons: Call & WhatsApp */}
+                {/* Quick Action Button: Call */}
                 {cleanPhone && (
                   <div className="flex items-center gap-2 pt-1 border-t border-border/40">
                     <a
                       href={`tel:${cleanPhone}`}
-                      className="flex-1 flex items-center justify-center gap-1.5 h-8 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition-colors"
+                      className="w-full flex items-center justify-center gap-1.5 h-8 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition-colors"
                     >
                       <Phone className="h-3.5 w-3.5" />
                       Call
-                    </a>
-                    <a
-                      href={`https://wa.me/${cleanPhone}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 flex items-center justify-center gap-1.5 h-8 rounded-xl bg-[#25D366]/10 text-[#25D366] text-xs font-semibold hover:bg-[#25D366]/20 transition-colors"
-                    >
-                      <MessageSquare className="h-3.5 w-3.5" />
-                      WhatsApp
                     </a>
                   </div>
                 )}

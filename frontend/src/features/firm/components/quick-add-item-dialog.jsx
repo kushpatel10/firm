@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Boxes, Plus, X, Loader2, Sparkles, Layers } from "lucide-react";
+import { Plus, X, Loader2, Sparkles, Layers } from "lucide-react";
 import { DEFAULT_UNITS } from "@/types/inventory.types";
 import { inventoryService } from "@/services/inventory.service";
 import { toast } from "sonner";
@@ -93,7 +93,7 @@ export function QuickAddItemDialog({
       <DialogContent className="max-w-md p-5">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base font-bold">
-            <Boxes className="h-4 w-4 text-primary" />
+            <Layers className="h-4 w-4 text-primary" />
             Quick Add New Item
           </DialogTitle>
           <DialogDescription className="text-xs">

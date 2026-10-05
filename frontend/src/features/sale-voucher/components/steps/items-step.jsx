@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Boxes, Tag, Edit, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
+import { Plus, Layers, Tag, Edit, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 
@@ -57,11 +57,18 @@ export function ItemsStep({
               // Parse dimensions for display
               let dimSummary = "";
               if (item.dimensions && typeof item.dimensions === "object") {
-                const parts = Object.entries(item.dimensions)
-                  .filter(([k]) => k.toLowerCase() !== "quantity" && k.toLowerCase() !== "qty" && k.toLowerCase() !== "unit")
-                  .map(([_, v]) => `${v}`);
-                if (parts.length > 0) {
-                  dimSummary = parts.join(" × ") + (item.dimensions.unit ? ` ${item.dimensions.unit}` : "");
+                const l = item.dimensions.length ?? item.dimensions.l;
+                const b = item.dimensions.breadth ?? item.dimensions.b ?? item.dimensions.width ?? item.dimensions.w;
+                const h = item.dimensions.height ?? item.dimensions.h ?? item.dimensions.thickness;
+                if (l != null && b != null) {
+                  dimSummary = `${l} × ${b}${h != null ? ` × ${h}` : ""}${item.dimensions.unit ? ` ${item.dimensions.unit}` : ""}`;
+                } else {
+                  const parts = Object.entries(item.dimensions)
+                    .filter(([k, v]) => !["quantity", "qty", "unit", "id"].includes(k.toLowerCase()) && v != null && v !== "")
+                    .map(([_, v]) => `${v}`);
+                  if (parts.length > 0) {
+                    dimSummary = parts.join(" × ") + (item.dimensions.unit ? ` ${item.dimensions.unit}` : "");
+                  }
                 }
               }
 
@@ -184,7 +191,7 @@ export function ItemsStep({
                   className="p-3.5 rounded-2xl bg-card border border-border/80 hover:border-primary hover:bg-primary/5 text-left transition-all active:scale-[0.98] cursor-pointer flex flex-col gap-1.5"
                 >
                   <div className="flex items-center gap-2">
-                    <Boxes className="h-4 w-4 text-primary" />
+                    <Layers className="h-4 w-4 text-primary" />
                     <span className="font-bold text-sm text-foreground">From Catalog</span>
                   </div>
                   <span className="text-[11px] text-muted-foreground">

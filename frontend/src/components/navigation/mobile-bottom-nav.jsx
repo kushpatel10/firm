@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   ShoppingCart,
-  Boxes,
+  Layers,
   ShoppingBag,
   Building2,
   Users,
@@ -69,7 +69,7 @@ export function MobileBottomNav() {
     : [
         { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
         { href: "/dashboard/sales", label: "Sales", icon: ShoppingCart },
-        { href: "/dashboard/items", label: "Items", icon: Boxes },
+        { href: "/dashboard/items", label: "Items", icon: Layers },
         { href: "/dashboard/purchases", label: "Purchases", icon: ShoppingBag },
       ];
 

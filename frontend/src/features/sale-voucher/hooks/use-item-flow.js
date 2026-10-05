@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { FormulaEvaluator } from "../engine/formula-evaluator";
 
 export const ITEM_STEPS = {
@@ -13,12 +13,14 @@ export const ITEM_STEPS = {
 export function useItemFlow({ categories = [], initialItem = null, onComplete, onCancel }) {
   // If editing, find initial category
   const initialCategory = useMemo(() => {
-    if (!initialItem?.category) return null;
-    return (
-      categories.find(
-        (c) => c.name.toLowerCase() === initialItem.category.toLowerCase()
-      ) || null
-    );
+    if (!initialItem) return null;
+    if (initialItem.categoryId) {
+      const match = categories.find((c) => c.id === initialItem.categoryId);
+      if (match) return match;
+    }
+    if (!initialItem.category) return null;
+    const catName = initialItem.category.toLowerCase();
+    return categories.find((c) => c.name.toLowerCase() === catName || catName.includes(c.name.toLowerCase())) || null;
   }, [categories, initialItem]);
 
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
@@ -27,13 +29,46 @@ export function useItemFlow({ categories = [], initialItem = null, onComplete, o
   const [isCustomSize, setIsCustomSize] = useState(false);
   const [customSizeText, setCustomSizeText] = useState("");
   const [dimensionValues, setDimensionValues] = useState(() => {
-    if (initialItem?.dimensions && typeof initialItem.dimensions === "object") {
-      return { ...initialItem.dimensions };
+    let dims = initialItem?.dimensions;
+    if (typeof dims === "string") {
+      try { dims = JSON.parse(dims); } catch (_) {}
+    }
+    if (dims && typeof dims === "object") {
+      return { ...dims };
     }
     return {};
   });
   const [rate, setRate] = useState(initialItem?.rate ?? initialItem?.unitPrice ?? "");
   const [quantity, setQuantity] = useState(initialItem?.quantity ?? 1);
+
+  // Sync state if initialItem or initialCategory changes
+  useEffect(() => {
+    if (initialCategory && !selectedCategory) {
+      setSelectedCategory(initialCategory);
+    }
+  }, [initialCategory, selectedCategory]);
+
+  useEffect(() => {
+    if (initialItem) {
+      if (initialItem.subtype) setSelectedSubtype(initialItem.subtype);
+      if (initialItem.size) {
+        setSelectedSize(initialItem.size);
+      }
+      let dims = initialItem.dimensions;
+      if (typeof dims === "string") {
+        try { dims = JSON.parse(dims); } catch (_) {}
+      }
+      if (dims && typeof dims === "object") {
+        setDimensionValues({ ...dims });
+      }
+      if (initialItem.rate != null || initialItem.unitPrice != null) {
+        setRate(initialItem.rate ?? initialItem.unitPrice);
+      }
+      if (initialItem.quantity != null) {
+        setQuantity(initialItem.quantity);
+      }
+    }
+  }, [initialItem]);
 
   // Dynamic step list based on selected category:
   // If category has no subtypes (or empty array), SUBTYPE step is excluded!

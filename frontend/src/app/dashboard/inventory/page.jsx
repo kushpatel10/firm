@@ -24,7 +24,7 @@ import {
   Package,
   AlertTriangle,
   ArrowUpDown,
-  Boxes,
+  Layers,
   Loader2,
   TrendingUp,
   TrendingDown,
@@ -279,7 +279,7 @@ export default function InventoryPage() {
           <div className="flex items-center gap-2">
             <Link href="/dashboard/items">
               <Button variant="outline" className="gap-2 text-xs h-9">
-                <Boxes className="h-4 w-4 text-primary" />
+                <Layers className="h-4 w-4 text-primary" />
                 <span>Open Item Catalog Master</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </Button>

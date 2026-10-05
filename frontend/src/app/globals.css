@@ -151,7 +151,7 @@
    Custom Utilities & Refined Minimal Surface Styles
    ────────────────────────────────────────────── */
 :root {
-  --sat: max(var(--safe-area-inset-top, 0px), env(safe-area-inset-top, 0px));
+  --sat: max(var(--safe-area-inset-top, 0px), env(safe-area-inset-top, 0px), var(--safe-area-fallback-top, 0px));
   --sab: max(var(--safe-area-inset-bottom, 0px), env(safe-area-inset-bottom, 0px), var(--safe-area-fallback-bottom, 0px));
   --sal: max(var(--safe-area-inset-left, 0px), env(safe-area-inset-left, 0px));
   --sar: max(var(--safe-area-inset-right, 0px), env(safe-area-inset-right, 0px));
@@ -308,4 +308,24 @@ textarea {
     box-shadow: none !important;
     background: transparent !important;
   }
+}
+
+/* Custom Sleek Scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(150, 150, 150, 0.25) transparent;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(150, 150, 150, 0.25);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 150, 150, 0.45);
 }

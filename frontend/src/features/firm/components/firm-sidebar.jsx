@@ -4,13 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard, ShoppingCart, ShoppingBag, Receipt, Package, Boxes,
+  LayoutDashboard, ShoppingCart, ShoppingBag, Receipt, Package, Layers,
   Users as UsersIcon, Truck, BarChart3, FileText, Settings, LogOut,
-  ChevronLeft, UserCircle, Scale,
+  ChevronLeft, UserCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/auth-context";
 import { useSidebar } from "@/contexts/sidebar-context";
@@ -21,11 +20,10 @@ const NAV_ITEMS = [
   { href: "/dashboard/sales", icon: ShoppingCart, label: "Sales", permission: "Sales.View" },
   { href: "/dashboard/purchases", icon: ShoppingBag, label: "Purchases", permission: "Purchase.View" },
   { href: "/dashboard/expenses", icon: Receipt, label: "Expenses", permission: "Expense.View" },
-  { href: "/dashboard/items", icon: Boxes, label: "Items", permission: "Inventory.View" },
+  { href: "/dashboard/items", icon: Layers, label: "Items", permission: "Inventory.View" },
   { href: "/dashboard/inventory", icon: Package, label: "Inventory", permission: "Inventory.View" },
   { href: "/dashboard/customers", icon: UserCircle, label: "Customers", permission: "Customers.View" },
   { href: "/dashboard/suppliers", icon: Truck, label: "Suppliers", permission: "Suppliers.View" },
-  { href: "/dashboard/omni-scale", icon: Scale, label: "Omni Scale" },
   { href: "/dashboard/reports", icon: BarChart3, label: "Reports", permission: "Reports.View" },
   { href: "/dashboard/delivery-challans", icon: FileText, label: "Delivery Challans", permission: "DeliveryChallans.View" },
   { type: "separator" },
@@ -38,8 +36,8 @@ function NavContent({ collapsed, onNavigate }) {
   const { hasPermission, logout } = useAuth();
 
   return (
-    <ScrollArea className="flex-1 py-3">
-      <nav className="space-y-1 px-3">
+    <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain py-3 touch-pan-y [webkit-overflow-scrolling:touch] custom-scrollbar">
+      <nav className="space-y-1 px-3 pb-8">
         {NAV_ITEMS.map((item, i) => {
           if (item.type === "separator") {
             return <Separator key={i} className="my-2.5 border-border/60" />;
@@ -82,7 +80,7 @@ function NavContent({ collapsed, onNavigate }) {
           {!collapsed && <span>Sign out</span>}
         </button>
       </nav>
-    </ScrollArea>
+    </div>
   );
 }
 
@@ -97,11 +95,11 @@ export function FirmSidebar() {
     <>
       {/* Mobile Drawer (WhatsApp / Telegram style) */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-76 sm:w-84 p-0 pt-safe pb-safe border-r border-border/70 bg-card flex flex-col h-full shadow-2xl">
+        <SheetContent side="left" className="w-76 sm:w-84 p-0 gap-0 pt-safe pb-safe border-r border-border/70 bg-card flex flex-col h-full max-h-dvh min-h-0 overflow-hidden shadow-2xl">
           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-full min-h-0 max-h-full overflow-hidden">
             {/* Telegram-style Profile Banner */}
-            <div className="flex items-center gap-3.5 px-5 py-5 border-b border-border/70 bg-muted/20">
+            <div className="shrink-0 flex items-center gap-3.5 px-5 py-5 border-b border-border/70 bg-muted/20 pr-12">
               <div className="relative shrink-0">
                 <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-primary to-blue-600 text-white font-bold text-lg flex items-center justify-center shadow-md">
                   {firmName.charAt(0).toUpperCase()}
@@ -121,7 +119,7 @@ export function FirmSidebar() {
             <NavContent collapsed={false} onNavigate={() => setMobileOpen(false)} />
 
             {/* Bottom info footer */}
-            <div className="p-4 border-t border-border/60 text-center text-[11px] text-muted-foreground font-mono">
+            <div className="shrink-0 p-4 border-t border-border/60 text-center text-[11px] text-muted-foreground font-mono bg-card">
               Firm • v1.0
             </div>
           </div>
@@ -131,11 +129,11 @@ export function FirmSidebar() {
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          "hidden lg:flex flex-col h-screen border-r border-border/70 bg-sidebar transition-[width] duration-200 shrink-0 select-none",
+          "hidden lg:flex flex-col h-screen min-h-0 overflow-hidden border-r border-border/70 bg-sidebar transition-[width] duration-200 shrink-0 select-none",
           collapsed ? "w-16" : "w-64"
         )}
       >
-        <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/70 h-14">
+        <div className="shrink-0 flex items-center justify-between px-4 py-3.5 border-b border-border/70 h-14">
           {!collapsed && (
             <div className="flex items-center gap-3 min-w-0">
               <div className="h-8 w-8 rounded-xl bg-secondary border border-border/80 text-foreground flex items-center justify-center text-xs font-semibold shrink-0 shadow-xs">

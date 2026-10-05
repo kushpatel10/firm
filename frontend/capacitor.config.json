@@ -6,9 +6,12 @@
     "androidScheme": "http"
   },
   "android": {
-    "adjustMarginsForEdgeToEdge": "auto"
+    "adjustMarginsForEdgeToEdge": "disable"
   },
   "plugins": {
+    "StatusBar": {
+      "overlaysWebView": true
+    },
     "SystemBars": {
       "insetsHandling": "css"
     }

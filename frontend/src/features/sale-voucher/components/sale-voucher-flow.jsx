@@ -63,6 +63,7 @@ export function SaleVoucherFlow({
   const {
     steps,
     stepIndex,
+    setStepIndex,
     currentStep,
     isFirstStep,
     isEditing,
@@ -86,10 +87,23 @@ export function SaleVoucherFlow({
     addItem,
     updateItem,
     deleteItem,
+    taxMode,
+    setTaxMode,
+    taxRate,
+    setTaxRate,
     tax,
     setTax,
+    selectTaxPreset,
+    taxAmount,
+    discountMode,
+    setDiscountMode,
+    discountRate,
+    setDiscountRate,
     discount,
     setDiscount,
+    discountAmount,
+    taxableAmount,
+    itemsSubtotal,
     status,
     setStatus,
     submitting,
@@ -137,7 +151,13 @@ export function SaleVoucherFlow({
   // Open item flow for editing
   const handleEditItem = (item, index) => {
     setEditingItemInfo({ item, index });
-    if (item.isCustom) {
+    const isCustom = Boolean(
+      item.isCustom ||
+      !item.category ||
+      item.category === "Custom Item" ||
+      item.snapshot?.isCustom
+    );
+    if (isCustom) {
       setCustomSheetOpen(true);
     } else {
       setCatalogModalOpen(true);
@@ -189,7 +209,15 @@ export function SaleVoucherFlow({
 
             {/* Step Progress Dots & Bar */}
             <div className="pt-2 px-1">
-              <StepIndicator steps={steps} currentStepIndex={stepIndex} />
+              <StepIndicator
+                steps={steps}
+                currentStepIndex={stepIndex}
+                onStepClick={(idx) => {
+                  if (idx > 0 && !canContinueParty) return;
+                  if (idx === 3 && items.length === 0) return;
+                  setStepIndex(idx);
+                }}
+              />
             </div>
           </header>
         )}
@@ -255,10 +283,24 @@ export function SaleVoucherFlow({
               saleType={saleType}
               description={description}
               items={items}
+              subtotal={itemsSubtotal}
+              taxMode={taxMode}
+              setTaxMode={setTaxMode}
+              taxRate={taxRate}
+              setTaxRate={setTaxRate}
               tax={tax}
               setTax={setTax}
+              selectTaxPreset={selectTaxPreset}
+              taxAmount={taxAmount}
+              discountMode={discountMode}
+              setDiscountMode={setDiscountMode}
+              discountRate={discountRate}
+              setDiscountRate={setDiscountRate}
               discount={discount}
               setDiscount={setDiscount}
+              discountAmount={discountAmount}
+              taxableAmount={taxableAmount}
+              grandTotal={grandTotal}
               status={status}
               setStatus={setStatus}
               submitting={submitting}
@@ -377,35 +419,42 @@ export function SaleVoucherFlow({
       </div>
 
       {/* Sub-Flow: Add/Edit Item from Catalog */}
-      <ItemFlowModal
-        isOpen={catalogModalOpen}
-        onClose={() => {
-          setCatalogModalOpen(false);
-          setEditingItemInfo(null);
-        }}
-        categories={categories}
-        initialItem={editingItemInfo?.item || null}
-        onAddItem={handleItemFlowComplete}
-        onOpenCategoryManager={() => setCategoryManagerOpen(true)}
-        loading={loadingCategories}
-      />
+      {catalogModalOpen && (
+        <ItemFlowModal
+          key={editingItemInfo ? `catalog_edit_${editingItemInfo.index}_${editingItemInfo.item?.id || ""}` : "catalog_new"}
+          isOpen={catalogModalOpen}
+          onClose={() => {
+            setCatalogModalOpen(false);
+            setEditingItemInfo(null);
+          }}
+          categories={categories}
+          initialItem={editingItemInfo?.item || null}
+          onAddItem={handleItemFlowComplete}
+          onOpenCategoryManager={() => setCategoryManagerOpen(true)}
+          loading={loadingCategories}
+        />
+      )}
 
       {/* Sub-Flow: Add/Edit Custom Item */}
-      <CustomItemSheet
-        isOpen={customSheetOpen}
-        onClose={() => {
-          setCustomSheetOpen(false);
-          setEditingItemInfo(null);
-        }}
-        onAddCustomItem={(customItem) => {
-          if (editingItemInfo != null) {
-            updateItem(customItem, editingItemInfo.index);
+      {customSheetOpen && (
+        <CustomItemSheet
+          key={editingItemInfo ? `custom_edit_${editingItemInfo.index}_${editingItemInfo.item?.id || ""}` : "custom_new"}
+          isOpen={customSheetOpen}
+          onClose={() => {
+            setCustomSheetOpen(false);
             setEditingItemInfo(null);
-          } else {
-            addItem(customItem);
-          }
-        }}
-      />
+          }}
+          initialItem={editingItemInfo?.item || null}
+          onAddCustomItem={(customItem) => {
+            if (editingItemInfo != null) {
+              updateItem(customItem, editingItemInfo.index);
+              setEditingItemInfo(null);
+            } else {
+              addItem(customItem);
+            }
+          }}
+        />
+      )}
 
       {/* Category & Formula Manager Modal */}
       <CategoryManagerDialog

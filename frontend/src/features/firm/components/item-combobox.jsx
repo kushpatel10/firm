@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Boxes, Plus, ChevronDown, Tag, Sparkles } from "lucide-react";
+import { Layers, Plus, ChevronDown, Tag, Sparkles } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 export function ItemCombobox({
@@ -263,7 +263,7 @@ export function ItemCombobox({
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 min-w-0">
-                        <Boxes className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <Layers className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <span className="font-semibold truncate">{item.name}</span>
                         {item.sku && (
                           <span className="text-[10px] font-mono text-muted-foreground bg-secondary px-1 py-0.2 rounded">

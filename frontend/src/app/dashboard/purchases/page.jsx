@@ -27,7 +27,8 @@ const TAX_RATE_PRESETS = [
   { label: "12% (GST)", value: "12" },
   { label: "18% (Standard GST)", value: "18" },
   { label: "28% (Luxury / Higher)", value: "28" },
-  { label: "Custom Amount", value: "custom" },
+  { label: "Custom Rate (%)", value: "custom_percent" },
+  { label: "Custom Amount (₹)", value: "custom" },
 ];
 
 export default function PurchasesPage() {
@@ -55,8 +56,9 @@ export default function PurchasesPage() {
   const [supplierName, setSupplierName] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [subtotal, setSubtotal] = useState("");
-  const [taxRateType, setTaxRateType] = useState("18"); // "0" | "5" | "12" | "18" | "28" | "custom"
+  const [taxRateType, setTaxRateType] = useState("18"); // "0" | "5" | "12" | "18" | "28" | "custom_percent" | "custom"
   const [taxAmount, setTaxAmount] = useState("");
+  const [customTaxRate, setCustomTaxRate] = useState("");
   const [discount, setDiscount] = useState("0");
   const [status, setStatus] = useState("RECEIVED");
 
@@ -67,6 +69,7 @@ export default function PurchasesPage() {
   const [editSubtotal, setEditSubtotal] = useState("");
   const [editTaxRateType, setEditTaxRateType] = useState("18");
   const [editTaxAmount, setEditTaxAmount] = useState("");
+  const [editCustomTaxRate, setEditCustomTaxRate] = useState("");
   const [editDiscount, setEditDiscount] = useState("0");
   const [editStatus, setEditStatus] = useState("RECEIVED");
 
@@ -103,22 +106,26 @@ export default function PurchasesPage() {
   }, []);
 
   // Tax calculation helper for Create Form
-  const calcTaxAmount = (subVal, rateType, customVal) => {
+  const calcTaxAmount = (subVal, rateType, customVal, customPercentVal) => {
     const sub = parseFloat(subVal) || 0;
     if (rateType === "custom") {
       return parseFloat(customVal) || 0;
     }
+    if (rateType === "custom_percent") {
+      const rate = parseFloat(customPercentVal) || 0;
+      return Math.round(((sub * rate) / 100) * 100) / 100;
+    }
     const rate = parseFloat(rateType) || 0;
-    return (sub * rate) / 100;
+    return Math.round(((sub * rate) / 100) * 100) / 100;
   };
 
-  const calculatedCreateTax = calcTaxAmount(subtotal, taxRateType, taxAmount);
+  const calculatedCreateTax = calcTaxAmount(subtotal, taxRateType, taxAmount, customTaxRate);
   const calculatedCreateGrandTotal = Math.max(
     0,
     (parseFloat(subtotal) || 0) + calculatedCreateTax - (parseFloat(discount) || 0)
   );
 
-  const calculatedEditTax = calcTaxAmount(editSubtotal, editTaxRateType, editTaxAmount);
+  const calculatedEditTax = calcTaxAmount(editSubtotal, editTaxRateType, editTaxAmount, editCustomTaxRate);
   const calculatedEditGrandTotal = Math.max(
     0,
     (parseFloat(editSubtotal) || 0) + calculatedEditTax - (parseFloat(editDiscount) || 0)
@@ -172,6 +179,7 @@ export default function PurchasesPage() {
     setSubtotal("");
     setTaxRateType("18");
     setTaxAmount("");
+    setCustomTaxRate("");
     setDiscount("0");
     setStatus("RECEIVED");
     setSupplierMode("registered");
@@ -182,8 +190,26 @@ export default function PurchasesPage() {
     setEditSupplierId(purchase.supplierId || "");
     setEditSupplierName(purchase.supplierName || purchase.supplier?.name || "");
     setEditInvoiceNumber(purchase.invoiceNumber || "");
-    setEditSubtotal(String(purchase.subtotal || purchase.total || ""));
-    setEditTaxRateType("custom");
+    const sub = purchase.subtotal || purchase.total || 0;
+    setEditSubtotal(String(sub || ""));
+    const pTax = parseFloat(purchase.tax) || 0;
+    if (sub > 0 && pTax > 0) {
+      const effective = (pTax / sub) * 100;
+      const rounded = Math.round(effective * 100) / 100;
+      if ([0, 5, 12, 18, 28].includes(Math.round(effective))) {
+        setEditTaxRateType(String(Math.round(effective)));
+        setEditCustomTaxRate("");
+      } else {
+        setEditTaxRateType("custom_percent");
+        setEditCustomTaxRate(String(rounded));
+      }
+    } else if (pTax === 0) {
+      setEditTaxRateType("0");
+      setEditCustomTaxRate("");
+    } else {
+      setEditTaxRateType("custom");
+      setEditCustomTaxRate("");
+    }
     setEditTaxAmount(String(purchase.tax || 0));
     setEditDiscount(String(purchase.discount || 0));
     setEditStatus(purchase.status || "RECEIVED");
@@ -641,6 +667,31 @@ export default function PurchasesPage() {
                       onChange={(e) => setTaxAmount(e.target.value)}
                     />
                   </div>
+                ) : taxRateType === "custom_percent" ? (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="custom-tax-pct" className="text-xs">Custom Tax Rate (%)</Label>
+                      <span className="text-[11px] font-mono text-primary font-semibold">
+                        +{formatCurrency(calculatedCreateTax)}
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <Input
+                        id="custom-tax-pct"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        placeholder="e.g. 3 or 7.5"
+                        value={customTaxRate}
+                        onChange={(e) => setCustomTaxRate(e.target.value)}
+                        className="pr-7 font-mono"
+                      />
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground pointer-events-none">
+                        %
+                      </span>
+                    </div>
+                  </div>
                 ) : (
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Calculated Tax Amount</Label>
@@ -766,6 +817,30 @@ export default function PurchasesPage() {
                       value={editTaxAmount}
                       onChange={(e) => setEditTaxAmount(e.target.value)}
                     />
+                  </div>
+                ) : editTaxRateType === "custom_percent" ? (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Custom Tax Rate (%)</Label>
+                      <span className="text-[11px] font-mono text-primary font-semibold">
+                        +{formatCurrency(calculatedEditTax)}
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        placeholder="e.g. 3 or 7.5"
+                        value={editCustomTaxRate}
+                        onChange={(e) => setEditCustomTaxRate(e.target.value)}
+                        className="pr-7 font-mono"
+                      />
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground pointer-events-none">
+                        %
+                      </span>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-1.5">

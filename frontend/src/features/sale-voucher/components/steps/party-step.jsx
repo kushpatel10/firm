@@ -274,7 +274,7 @@ export function PartyStep({
 
             <div className="space-y-1.5">
               <Label htmlFor="customPartyPhone" className="text-xs font-semibold text-muted-foreground">
-                Customer Phone (Optional, for WhatsApp bill)
+                Customer Phone (Optional)
               </Label>
               <div className="relative">
                 <Phone className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />

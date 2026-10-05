@@ -14,6 +14,7 @@ export function ItemReviewStep({
   calculationResult,
   onEdit,
   onAddItem,
+  isEditing = false,
 }) {
   const finalSize = isCustomSize ? (customSizeText || "Custom Size") : selectedSize;
   const dimEntries = Object.entries(dimensionValues).filter(
@@ -138,9 +139,17 @@ export function ItemReviewStep({
           type="button"
           size="lg"
           onClick={onAddItem}
-          className="flex-2 h-12 sm:h-13 text-base font-semibold rounded-2xl shadow-lg shadow-primary/20 gap-2"
+          className="flex-2 h-12 sm:h-13 text-base font-semibold rounded-2xl shadow-lg shadow-primary/20 gap-2 cursor-pointer"
         >
-          <Plus className="h-4 w-4 stroke-[3]" /> Add to Voucher
+          {isEditing ? (
+            <>
+              <Edit className="h-4 w-4" /> Update Item
+            </>
+          ) : (
+            <>
+              <Plus className="h-4 w-4 stroke-[3]" /> Add to Voucher
+            </>
+          )}
         </Button>
       </div>
     </div>

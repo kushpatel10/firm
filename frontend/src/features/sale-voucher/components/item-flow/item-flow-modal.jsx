@@ -92,7 +92,7 @@ export function ItemFlowModal({
 
             <div className="text-center min-w-0 flex-1">
               <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
-                Add Item from Catalog
+                {initialItem ? "Edit Item Specifications" : "Add Item from Catalog"}
               </span>
               <h1 className="text-sm sm:text-base font-bold text-foreground truncate">
                 Step {currentStepNum} of {totalSteps}
@@ -185,6 +185,7 @@ export function ItemFlowModal({
               calculationResult={calculationResult}
               onEdit={() => jumpToStep(ITEM_STEPS.DIMENSIONS)}
               onAddItem={handleFinish}
+              isEditing={Boolean(initialItem)}
             />
           )}
         </main>

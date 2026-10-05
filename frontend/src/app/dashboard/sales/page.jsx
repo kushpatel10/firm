@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Plus, ShoppingCart, Loader2, Trash2, Edit, Printer, FileText, Building2, User, Download, Share2, Tag, Boxes, Sparkles, CheckCircle2, Phone, MapPin, Send
+  Plus, ShoppingCart, Loader2, Trash2, Edit, Printer, FileText, Building2, User, Download, Share2, Tag, Sparkles, CheckCircle2, Phone, MapPin, Send
 } from "lucide-react";
 import { SALE_STATUS } from "@/types/sales.types";
 import { salesService } from "@/services/sales.service";
@@ -31,6 +31,84 @@ import { SaleVoucherFlow } from "@/features/sale-voucher";
 import { formatCurrency, formatDate, numberToWords, getInitials } from "@/lib/utils";
 import { toast } from "sonner";
 import { placeholders } from "@/config/placeholders";
+
+function renderSizeDim(item) {
+  if (!item) return <span className="text-muted-foreground text-xs italic">—</span>;
+
+  let dims = item.dimensions || item.snapshot?.dimensions;
+  if (typeof dims === "string") {
+    try {
+      dims = JSON.parse(dims);
+    } catch (_) {}
+  }
+
+  let dimParts = [];
+  let unit = "";
+
+  if (dims && typeof dims === "object") {
+    unit = dims.unit && dims.unit.toLowerCase() !== "pcs" && dims.unit.toLowerCase() !== "piece" ? dims.unit : "";
+
+    const length = dims.length ?? dims.l ?? dims.Length ?? dims.L;
+    const breadth = dims.breadth ?? dims.b ?? dims.Breadth ?? dims.B ?? dims.width ?? dims.w ?? dims.Width ?? dims.W;
+    const height = dims.height ?? dims.h ?? dims.Height ?? dims.H ?? dims.thickness ?? dims.depth;
+
+    if (length != null && length !== "" && breadth != null && breadth !== "") {
+      dimParts.push(length);
+      dimParts.push(breadth);
+      if (height != null && height !== "") {
+        dimParts.push(height);
+      }
+    } else {
+      Object.entries(dims).forEach(([k, v]) => {
+        const lower = k.toLowerCase();
+        if (!["quantity", "qty", "unit", "id"].includes(lower) && v != null && v !== "") {
+          dimParts.push(v);
+        }
+      });
+    }
+  }
+
+  const dimText = dimParts.length > 0 ? dimParts.join(" × ") + (unit ? ` ${unit}` : "") : "";
+  const sizeText = item.size?.trim();
+
+  if (dimText && sizeText && sizeText.toLowerCase() !== "custom" && sizeText.toLowerCase() !== "custom size") {
+    if (dimText === sizeText || dimText.includes(sizeText)) {
+      return (
+        <span className="font-mono font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-xs">
+          {dimText}
+        </span>
+      );
+    }
+    return (
+      <div className="flex flex-col items-center leading-tight">
+        <span className="font-mono font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-xs">
+          {dimText}
+        </span>
+        <span className="text-[10px] text-muted-foreground font-medium mt-0.5">
+          {sizeText}
+        </span>
+      </div>
+    );
+  }
+
+  if (dimText) {
+    return (
+      <span className="font-mono font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-xs">
+        {dimText}
+      </span>
+    );
+  }
+
+  if (sizeText) {
+    return (
+      <span className="font-mono font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-xs">
+        {sizeText}
+      </span>
+    );
+  }
+
+  return <span className="text-muted-foreground text-xs italic">—</span>;
+}
 
 export default function SalesPage() {
   const { firm: authFirm, loading: authLoading } = useAuth();
@@ -403,8 +481,18 @@ export default function SalesPage() {
     setSaleFlowOpen(true);
   };
 
-  const openEditSale = (sale) => {
-    setSelectedSale(sale);
+  const openEditSale = async (sale) => {
+    setInvoiceModalOpen(false);
+    let targetSale = sale;
+    if (!sale?.items || sale.items.length === 0) {
+      try {
+        const full = await salesService.getById(firmId, sale.id);
+        if (full) targetSale = full;
+      } catch (err) {
+        console.warn("Could not fetch complete sale record:", err);
+      }
+    }
+    setSelectedSale(targetSale);
     setSaleFlowOpen(true);
   };
 
@@ -794,7 +882,7 @@ export default function SalesPage() {
                     </p>
                   </div>
 
-                  {/* WhatsApp & Actions Row */}
+                  {/* Actions Row */}
                   <div className="flex items-center gap-2 pt-2 border-t border-border/50">
                     <Button
                       size="sm"
@@ -803,14 +891,6 @@ export default function SalesPage() {
                       onClick={() => viewInvoice(sale)}
                     >
                       <FileText className="h-3.5 w-3.5" /> View Bill
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="h-9 px-3.5 text-xs gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold rounded-xl"
-                      onClick={() => handleWhatsAppShare(sale)}
-                      title="Share via WhatsApp"
-                    >
-                      <Share2 className="h-3.5 w-3.5" /> WhatsApp
                     </Button>
                     <Button
                       size="sm"
@@ -832,18 +912,21 @@ export default function SalesPage() {
 
 
       {/* Mobile-First Step-by-Step Sale Voucher Flow */}
-      <SaleVoucherFlow
-        isOpen={saleFlowOpen}
-        onClose={() => {
-          setSaleFlowOpen(false);
-          setSelectedSale(null);
-        }}
-        firmId={firmId}
-        customers={customers}
-        initialSale={selectedSale}
-        onSaveVoucher={handleSaveVoucherFlow}
-        onViewInvoice={(sale) => viewInvoice(sale)}
-      />
+      {saleFlowOpen && (
+        <SaleVoucherFlow
+          key={selectedSale ? `edit_${selectedSale.id}_${selectedSale.updatedAt || ""}` : "new_sale"}
+          isOpen={saleFlowOpen}
+          onClose={() => {
+            setSaleFlowOpen(false);
+            setSelectedSale(null);
+          }}
+          firmId={firmId}
+          customers={customers}
+          initialSale={selectedSale}
+          onSaveVoucher={handleSaveVoucherFlow}
+          onViewInvoice={(sale) => viewInvoice(sale)}
+        />
+      )}
 
       {/* Delete Sale Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -873,9 +956,9 @@ export default function SalesPage() {
           {selectedSale && (() => {
             const billFirm = selectedSale.firm || authFirm || {};
             const firmName = billFirm.name || "Business Firm";
-            const firmAddress = billFirm.address || "Plot 42, Sector 18, Udyog Vihar, Phase II, Gurugram, Haryana - 122015";
-            const firmPhone = billFirm.phone || "+91 98765 43210";
-            const firmGstin = billFirm.gstNumber || (selectedSale.saleType !== "KACHU" ? "06AAACR5432K1Z9" : null);
+            const firmAddress = billFirm.address || "";
+            const firmPhone = billFirm.phone || "";
+            const firmGstin = billFirm.gstNumber || null;
 
             let custPhone = selectedSale.customer?.phone || "";
             let custAddress = selectedSale.customer?.address || "";
@@ -918,11 +1001,13 @@ export default function SalesPage() {
                       </div>
 
                       <div className="text-xs text-muted-foreground space-y-0.5 pt-1">
-                        <p className="leading-relaxed">{firmAddress}</p>
-                        <div className="flex flex-wrap gap-x-4 gap-y-0.5 font-medium pt-0.5">
-                          <span>Phone: <strong className="text-foreground">{firmPhone}</strong></span>
-                          {billFirm.email && <span>Email: {billFirm.email}</span>}
-                        </div>
+                        {firmAddress && <p className="leading-relaxed">{firmAddress}</p>}
+                        {(firmPhone || billFirm.email) && (
+                          <div className="flex flex-wrap gap-x-4 gap-y-0.5 font-medium pt-0.5">
+                            {firmPhone && <span>Phone: <strong className="text-foreground">{firmPhone}</strong></span>}
+                            {billFirm.email && <span>Email: {billFirm.email}</span>}
+                          </div>
+                        )}
                         {firmGstin && selectedSale.saleType !== "KACHU" && (
                           <p className="font-mono text-xs font-semibold text-foreground pt-0.5">
                             GSTIN: <span className="text-primary font-bold">{firmGstin}</span>
@@ -957,7 +1042,7 @@ export default function SalesPage() {
                   </div>
 
                   {/* Billed To / Party Details */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-muted/40 p-4 rounded-xl border border-border/60">
+                  <div className="text-xs bg-muted/40 p-4 rounded-xl border border-border/60">
                     <div className="space-y-1">
                       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
                         Billed To (Customer / Party)
@@ -965,32 +1050,25 @@ export default function SalesPage() {
                       <p className="font-bold text-sm text-foreground">
                         {selectedSale.customerName || selectedSale.customer?.name || "Walk-in Customer"}
                       </p>
-                      {custPhone ? (
-                        <p className="text-muted-foreground">
-                          Mobile: <span className="font-mono text-foreground font-medium">{custPhone}</span>
-                        </p>
-                      ) : (
-                        <p className="text-muted-foreground italic">Mobile: Not provided</p>
-                      )}
+                      <div className="flex flex-wrap gap-x-4 gap-y-0.5 pt-0.5">
+                        {custPhone ? (
+                          <p className="text-muted-foreground">
+                            Mobile: <span className="font-mono text-foreground font-medium">{custPhone}</span>
+                          </p>
+                        ) : (
+                          <p className="text-muted-foreground italic">Mobile: Not provided</p>
+                        )}
+                        {selectedSale.customer?.gstNumber && (
+                          <p className="font-mono text-muted-foreground">
+                            GSTIN: <span className="text-foreground font-semibold">{selectedSale.customer.gstNumber}</span>
+                          </p>
+                        )}
+                      </div>
                       {custAddress ? (
-                        <p className="text-muted-foreground leading-relaxed">{custAddress}</p>
+                        <p className="text-muted-foreground leading-relaxed pt-0.5">{custAddress}</p>
                       ) : (
-                        <p className="text-muted-foreground italic">Counter Sale / General Consumer</p>
+                        <p className="text-muted-foreground italic pt-0.5">Counter Sale / General Consumer</p>
                       )}
-                      {selectedSale.customer?.gstNumber && (
-                        <p className="font-mono text-muted-foreground">
-                          GSTIN: <span className="text-foreground font-semibold">{selectedSale.customer.gstNumber}</span>
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-1 sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-                        Dispatch & Billing Terms
-                      </span>
-                      <p className="text-muted-foreground">Place of Supply: <strong className="text-foreground">State Code (06) - Local</strong></p>
-                      <p className="text-muted-foreground">Payment Mode: <strong className="text-foreground">Cash / Bank / UPI</strong></p>
-                      <p className="text-muted-foreground">Reverse Charge: <strong className="text-foreground">No (Applicable to Buyer: No)</strong></p>
                     </div>
                   </div>
 
@@ -1001,7 +1079,7 @@ export default function SalesPage() {
                         <tr>
                           <th className="p-2.5 sm:p-3 w-10 text-center">#</th>
                           <th className="p-2.5 sm:p-3">Item Description</th>
-                          <th className="p-2.5 sm:p-3 text-center w-28">Size / Dim</th>
+                          <th className="p-2.5 sm:p-3 text-center w-36">Size / Dim</th>
                           <th className="p-2.5 sm:p-3 text-center w-20">Qty</th>
                           <th className="p-2.5 sm:p-3 text-right w-28">Rate (₹)</th>
                           <th className="p-2.5 sm:p-3 text-right w-32">Amount (₹)</th>
@@ -1017,13 +1095,7 @@ export default function SalesPage() {
                                 {item.category && <span className="text-[10px] font-normal text-muted-foreground">{item.category}</span>}
                               </td>
                               <td className="p-2.5 sm:p-3 text-center">
-                                {item.size ? (
-                                  <span className="font-mono font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-xs">
-                                    {item.size}
-                                  </span>
-                                ) : (
-                                  <span className="text-muted-foreground text-xs italic">—</span>
-                                )}
+                                {renderSizeDim(item)}
                               </td>
                               <td className="p-2.5 sm:p-3 text-center font-mono font-medium">
                                 {item.quantity} <span className="text-[10px] text-muted-foreground">{item.unit || "pcs"}</span>
@@ -1050,9 +1122,9 @@ export default function SalesPage() {
                     </table>
                   </div>
 
-                  {/* Totals, Summary, Words & Bank Box */}
+                  {/* Totals, Summary, Words */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-1">
-                    {/* Left: Words, Notes, UPI details */}
+                    {/* Left: Words, Notes */}
                     <div className="space-y-3">
                       {/* Amount in Words */}
                       <div className="p-3 rounded-xl bg-muted/30 border border-border/50 text-xs space-y-1">
@@ -1070,13 +1142,6 @@ export default function SalesPage() {
                           <strong>Notes:</strong> {cleanNotes}
                         </div>
                       )}
-
-                      {/* Bank & UPI Transfer Box */}
-                      <div className="p-3 rounded-xl border border-dashed border-border text-[11px] text-muted-foreground space-y-1">
-                        <p className="font-semibold text-foreground">Bank Details & UPI Payment:</p>
-                        <p>Firm UPI ID: <span className="font-mono font-bold text-foreground">{firmName.toLowerCase().replace(/[^a-z0-9]/g, "")}@upi</span></p>
-                        <p>Accepted via Google Pay, PhonePe, Paytm, or NetBanking</p>
-                      </div>
                     </div>
 
                     {/* Right: Calculations */}
@@ -1146,13 +1211,6 @@ export default function SalesPage() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                    <Button
-                      type="button"
-                      onClick={() => handleWhatsAppShare(selectedSale)}
-                      className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-11 sm:h-9"
-                    >
-                      <Share2 className="h-4 w-4" /> Share on WhatsApp
-                    </Button>
                     <Button
                       type="button"
                       onClick={handlePrint}

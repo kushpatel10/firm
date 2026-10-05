@@ -57,13 +57,15 @@ const salesService = {
     const { items = [], id: _, firm: __, customer: ___, branch: ____, ...saleData } = data;
 
     // Calculate subtotal from items if provided, or fallback to subtotal/total
-    const subtotal = items.length > 0
-      ? items.reduce((sum, item) => sum + (parseFloat(item.quantity) || 1) * (parseFloat(item.unitPrice) || 0), 0)
-      : (parseFloat(saleData.subtotal) || parseFloat(saleData.total) || 0);
+    const subtotal = saleData.subtotal !== undefined
+      ? parseFloat(saleData.subtotal)
+      : (items.length > 0
+          ? items.reduce((sum, item) => sum + (parseFloat(item.total) || (parseFloat(item.quantity) || 1) * (parseFloat(item.unitPrice) || 0)), 0)
+          : (parseFloat(saleData.total) || 0));
 
     const tax = parseFloat(saleData.tax) || 0;
     const discount = parseFloat(saleData.discount) || 0;
-    const total = Math.max(0, subtotal + tax - discount);
+    const total = saleData.total !== undefined ? parseFloat(saleData.total) : Math.max(0, subtotal + tax - discount);
 
     const prefix = (saleData.saleType || "PAKU") === "KACHU" ? "KCH" : "INV";
     let generatedInvoiceNum = saleData.invoiceNumber;
@@ -106,7 +108,7 @@ const salesService = {
             quantity: parseInt(item.quantity) || 1,
             unit: item.unit || "pcs",
             unitPrice: parseFloat(item.unitPrice) || 0,
-            total: (parseInt(item.quantity) || 1) * (parseFloat(item.unitPrice) || 0),
+            total: item.total != null ? parseFloat(item.total) : (parseInt(item.quantity) || 1) * (parseFloat(item.unitPrice) || 0),
             dimensions: item.dimensions || null,
             formula: item.formula || null,
             calculatedArea: item.calculatedArea != null ? parseFloat(item.calculatedArea) : null,
@@ -139,11 +141,13 @@ const salesService = {
     const discount = saleData.discount !== undefined ? (parseFloat(saleData.discount) || 0) : (existingSale.discount || 0);
 
     if (items) {
-      const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.quantity) || 1) * (parseFloat(item.unitPrice) || 0), 0);
+      const subtotal = saleData.subtotal !== undefined
+        ? parseFloat(saleData.subtotal)
+        : items.reduce((sum, item) => sum + (parseFloat(item.total) || (parseFloat(item.quantity) || 1) * (parseFloat(item.unitPrice) || 0)), 0);
       updateData.subtotal = subtotal;
       updateData.tax = tax;
       updateData.discount = discount;
-      updateData.total = Math.max(0, subtotal + tax - discount);
+      updateData.total = saleData.total !== undefined ? parseFloat(saleData.total) : Math.max(0, subtotal + tax - discount);
 
       updateData.items = {
         create: items.map((item) => ({
@@ -153,7 +157,7 @@ const salesService = {
           quantity: parseInt(item.quantity) || 1,
           unit: item.unit || "pcs",
           unitPrice: parseFloat(item.unitPrice) || 0,
-          total: (parseInt(item.quantity) || 1) * (parseFloat(item.unitPrice) || 0),
+          total: item.total != null ? parseFloat(item.total) : (parseInt(item.quantity) || 1) * (parseFloat(item.unitPrice) || 0),
           dimensions: item.dimensions || null,
           formula: item.formula || null,
           calculatedArea: item.calculatedArea != null ? parseFloat(item.calculatedArea) : null,
@@ -162,12 +166,12 @@ const salesService = {
           snapshot: item.snapshot || null,
         })),
       };
-    } else if (saleData.subtotal !== undefined || saleData.tax !== undefined || saleData.discount !== undefined) {
-      const subtotal = saleData.subtotal !== undefined ? (parseFloat(saleData.subtotal) || 0) : existingSale.subtotal;
+    } else if (saleData.subtotal !== undefined || saleData.tax !== undefined || saleData.discount !== undefined || saleData.total !== undefined) {
+      const subtotal = saleData.subtotal !== undefined ? parseFloat(saleData.subtotal) : existingSale.subtotal;
       updateData.subtotal = subtotal;
       updateData.tax = tax;
       updateData.discount = discount;
-      updateData.total = Math.max(0, subtotal + tax - discount);
+      updateData.total = saleData.total !== undefined ? parseFloat(saleData.total) : Math.max(0, subtotal + tax - discount);
     }
 
     // Atomic transaction ensures items are not lost if update fails
