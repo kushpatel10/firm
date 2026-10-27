@@ -1,9 +1,5 @@
 # Firm — Multi-Tenant Business Management Platform & Zero-Knowledge Encrypted Cloud Backup Engine
 
-> **End-Term Software Engineering Project Submission**  
-> **Official Submission Form:** [Google Form Link](https://forms.gle/sBy4sfqyiRG2Zpom9)  
-> **Submission Deadline:** 27 October 2026, 11:59 PM IST
-
 ---
 
 ## 📋 Submission Information
