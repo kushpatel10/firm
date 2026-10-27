@@ -248,7 +248,7 @@ async function request(endpoint, options = {}) {
 
   const execRequest = async () => {
     const headers = {
-      "Content-Type": "application/json",
+      ...(typeof FormData !== "undefined" && options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
       ...options.headers,
     };
 
@@ -364,6 +364,18 @@ export const apiClient = {
     return request(endpoint, {
       method: "POST",
       body: JSON.stringify(body),
+    });
+  },
+
+  /**
+   * @param {string} endpoint
+   * @param {FormData} formData
+   * @returns {Promise<any>}
+   */
+  postFormData(endpoint, formData) {
+    return request(endpoint, {
+      method: "POST",
+      body: formData,
     });
   },
 

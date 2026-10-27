@@ -13,7 +13,8 @@ const router = Router();
 // GET /api/auth/google — Get Google OAuth consent URL
 router.get("/google", (req, res) => {
   const redirectUri = req.query.redirectUri || null;
-  const url = authService.getGoogleAuthUrl(redirectUri);
+  const state = req.query.state || null;
+  const url = authService.getGoogleAuthUrl(redirectUri, state);
   success(res, { url });
 });
 

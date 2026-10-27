@@ -82,9 +82,12 @@ export function getGoogleRedirectURI() {
 
 /**
  * Build the Google OAuth 2.0 consent URL
+ * @param {Object} [options]
+ * @param {string} [options.state]
+ * @param {boolean} [options.isNative]
  * @returns {string}
  */
-export function getGoogleOAuthURL() {
+export function getGoogleOAuthURL(options = {}) {
   const redirectUri = getGoogleRedirectURI();
 
   const params = new URLSearchParams({
@@ -95,6 +98,27 @@ export function getGoogleOAuthURL() {
     access_type: "offline",
     prompt: "consent",
   });
+
+  let isNative = options.isNative;
+  if (isNative === undefined && typeof window !== "undefined") {
+    try {
+      const { Capacitor } = require("@capacitor/core");
+      isNative =
+        (typeof Capacitor?.isNativePlatform === "function" && Capacitor.isNativePlatform()) ||
+        window.location.protocol === "capacitor:" ||
+        process.env.NEXT_PUBLIC_IS_CAPACITOR_BUILD === "true";
+    } catch {
+      isNative =
+        window.location.protocol === "capacitor:" ||
+        process.env.NEXT_PUBLIC_IS_CAPACITOR_BUILD === "true";
+    }
+  }
+
+  if (options.state) {
+    params.set("state", options.state);
+  } else if (isNative) {
+    params.set("state", "capacitor");
+  }
 
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }

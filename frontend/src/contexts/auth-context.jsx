@@ -12,9 +12,16 @@ function isNative() {
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { Capacitor } = require("@capacitor/core");
-    return Capacitor.isNativePlatform();
+    return (
+      (typeof Capacitor?.isNativePlatform === "function" && Capacitor.isNativePlatform()) ||
+      window.location.protocol === "capacitor:" ||
+      process.env.NEXT_PUBLIC_IS_CAPACITOR_BUILD === "true"
+    );
   } catch {
-    return false;
+    return (
+      window.location.protocol === "capacitor:" ||
+      process.env.NEXT_PUBLIC_IS_CAPACITOR_BUILD === "true"
+    );
   }
 }
 
@@ -161,14 +168,24 @@ export function AuthProvider({ children }) {
     return promise;
   }, []);
 
-  // Handle native deep link URLs (com.firm.app://callback?token=...)
+  // Handle native deep link URLs (com.bcalc.app://callback?token=...)
   useEffect(() => {
     const handleEvent = async () => {
       if (typeof window !== "undefined") {
         localStorage.removeItem("firm_user_logged_out");
         sessionStorage.removeItem("firm_user_logged_out");
       }
-      await restoreSession();
+      const ok = await restoreSession();
+      if (ok) {
+        let isSuperAdmin = false;
+        try {
+          const cached = typeof window !== "undefined" ? localStorage.getItem("firm_cached_session") : null;
+          if (cached) isSuperAdmin = JSON.parse(cached)?.user?.isSuperAdmin;
+        } catch {}
+        try {
+          router.replace(isSuperAdmin ? "/admin" : "/dashboard");
+        } catch {}
+      }
     };
 
     if (typeof window !== "undefined") {
@@ -178,12 +195,6 @@ export function AuthProvider({ children }) {
     // Check cold start launch URL — native only
     async function checkLaunchUrl() {
       if (!isNative()) return;
-      if (typeof window !== "undefined") {
-        const isLoggedOut =
-          localStorage.getItem("firm_user_logged_out") === "true" ||
-          sessionStorage.getItem("firm_user_logged_out") === "true";
-        if (isLoggedOut) return;
-      }
       try {
         const { App: CapacitorApp } = await import("@capacitor/app");
         const launchUrl = await CapacitorApp.getLaunchUrl();
@@ -201,7 +212,17 @@ export function AuthProvider({ children }) {
             }
             const token = decodeURIComponent(match[1]);
             storeToken(token);
-            await restoreSession();
+            const ok = await restoreSession();
+            if (ok) {
+              let isSuperAdmin = false;
+              try {
+                const cached = typeof window !== "undefined" ? localStorage.getItem("firm_cached_session") : null;
+                if (cached) isSuperAdmin = JSON.parse(cached)?.user?.isSuperAdmin;
+              } catch {}
+              try {
+                router.replace(isSuperAdmin ? "/admin" : "/dashboard");
+              } catch {}
+            }
           }
         }
       } catch {}
@@ -213,7 +234,7 @@ export function AuthProvider({ children }) {
         window.removeEventListener("firm_auth_token_received", handleEvent);
       }
     };
-  }, [restoreSession]);
+  }, [restoreSession, router]);
 
   // Initialize auth state
   useEffect(() => {
@@ -260,13 +281,13 @@ export function AuthProvider({ children }) {
 
     const isCapacitorNative =
       typeof window !== "undefined" &&
-      (isNative() || window.location.protocol === "capacitor:");
+      (isNative() || window.location.protocol === "capacitor:" || process.env.NEXT_PUBLIC_IS_CAPACITOR_BUILD === "true");
 
     if (isDevAuthBypass() || !process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
       return await devLogin();
     }
 
-    const url = authService.getGoogleAuthUrl();
+    const url = authService.getGoogleAuthUrl({ isNative: isCapacitorNative });
     if (typeof window !== "undefined") {
       if (isCapacitorNative) {
         try {

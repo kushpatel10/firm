@@ -242,13 +242,15 @@ const authService = {
   /**
    * Get the Google OAuth consent URL.
    * @param {string|null} redirectUri - Optional redirect URI override
+   * @param {string|null} state - Optional state parameter for OAuth flow
    * @returns {string}
    */
-  getGoogleAuthUrl(redirectUri = null) {
+  getGoogleAuthUrl(redirectUri = null, state = null) {
     return googleClient.generateAuthUrl({
       access_type: "offline",
       scope: ["openid", "email", "profile"],
       redirect_uri: redirectUri || config.googleRedirectUri,
+      ...(state ? { state } : {}),
     });
   },
 

@@ -32,6 +32,24 @@ enum UserStatus {
   SUSPENDED
 }
 
+enum BackupStatus {
+  QUEUED
+  RUNNING
+  UPLOADING
+  VERIFYING
+  SUCCESS
+  FAILED
+  AUTH_EXPIRED
+  CANCELLED
+}
+
+enum BackupActionType {
+  AUTO_SCHEDULED
+  MANUAL_EXPORT
+  RESTORE_OVERWRITE
+  RESTORE_NEW_FIRM
+}
+
 // ──────────────────────────────────────────────
 // Core Entities
 // ──────────────────────────────────────────────
@@ -69,6 +87,8 @@ model Firm {
   inventoryItems  InventoryItem[]
   deliveryChallans DeliveryChallan[]
   categories       Category[]
+  backupConfig     FirmBackupConfig?
+  backupHistories  BackupHistory[]
 
   @@map("firms")
 }
@@ -551,4 +571,59 @@ model PricingRule {
 
   @@index([categoryId])
   @@map("pricing_rules")
+}
+
+// ──────────────────────────────────────────────
+// Backup & Cloud Synchronization
+// ──────────────────────────────────────────────
+
+/// Stores Google Drive OAuth configuration and backup schedule per firm
+model FirmBackupConfig {
+  id                  String        @id @default(cuid())
+  firmId              String        @unique
+  firm                Firm          @relation(fields: [firmId], references: [id], onDelete: Cascade)
+
+  // Google Drive Credentials (Encrypted at rest with backend MASTER_KEY)
+  googleEmail         String?
+  googleRefreshToken  String?       // Encrypted token for background scheduling
+  googleFolderId      String?       // ID of "Firm Backups" folder
+
+  // Automation Schedule
+  autoBackupEnabled   Boolean       @default(false)
+  backupTime          String        @default("02:00") // HH:MM 24-hr format
+  timezone            String        @default("Asia/Kolkata")
+  retentionDays       Int           @default(30)
+
+  // Audit of execution
+  lastBackupAt        DateTime?
+  lastBackupStatus    BackupStatus?
+  lastError           String?
+
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@map("firm_backup_configs")
+}
+
+/// Immutable audit record of every backup and restore event
+model BackupHistory {
+  id              String           @id @default(cuid())
+  backupId        String           @unique // Unique UUID for idempotency
+  firmId          String
+  firm            Firm             @relation(fields: [firmId], references: [id], onDelete: Cascade)
+
+  actionType      BackupActionType
+  status          BackupStatus
+  fileName        String?
+  fileSizeBytes   Int?
+  googleFileId    String?
+  manifest        Json?            // Summary counts: { sales: 4, items: 12, ... }
+  durationMs      Int?
+  errorMessage    String?
+
+  createdAt       DateTime         @default(now())
+
+  @@index([firmId, createdAt(sort: Desc)])
+  @@index([backupId])
+  @@map("backup_histories")
 }

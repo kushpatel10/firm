@@ -31,6 +31,8 @@ const deliveryChallanRoutes = require("./routes/delivery-challan.routes");
 const branchRoutes = require("./routes/branch.routes");
 const reportRoutes = require("./routes/report.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
+const backupRoutes = require("./routes/backup.routes");
+const { initScheduler } = require("./services/scheduler.service");
 
 const app = express();
 
@@ -162,6 +164,7 @@ app.use("/api/firms/:firmId/suppliers", supplierRoutes);
 app.use("/api/firms/:firmId/delivery-challans", deliveryChallanRoutes);
 app.use("/api/firms/:firmId/branches", branchRoutes);
 app.use("/api/firms/:firmId/reports", reportRoutes);
+app.use("/api/firms/:firmId/backup", backupRoutes);
 
 // Admin routes (Super Admin)
 app.use("/api/firms", firmRoutes);
@@ -195,7 +198,10 @@ const server = app.listen(config.port, "0.0.0.0", () => {
 
   // Pre-warm database connection pool to eliminate cold-start query penalty
   prisma.$connect()
-    .then(() => console.log("   Database: Connection pool pre-warmed & ready\n"))
+    .then(() => {
+      console.log("   Database: Connection pool pre-warmed & ready\n");
+      initScheduler();
+    })
     .catch((err) => console.warn("   Database warning:", err.message));
 });
 

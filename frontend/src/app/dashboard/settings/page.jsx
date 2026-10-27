@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/shared/page-header";
+import { BackupSettingsTab } from "@/components/settings/backup-tab";
 import { PermissionGate } from "@/components/shared/permission-gate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,10 +27,19 @@ import { toast } from "sonner";
 import { placeholders } from "@/config/placeholders";
 
 export default function SettingsPage() {
+  const searchParams = useSearchParams();
   const { firm, loading: authLoading } = useAuth();
   const firmId = firm?.id;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "general");
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   // Profile form state
   const [name, setName] = useState("");
@@ -144,10 +155,11 @@ export default function SettingsPage() {
         breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Settings" }]}
       />
 
-      <Tabs defaultValue="general">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="branches">Branches ({branches.length})</TabsTrigger>
+          <TabsTrigger value="backups">Backups &amp; Cloud</TabsTrigger>
           <TabsTrigger value="preferences">Preferences</TabsTrigger>
         </TabsList>
 
@@ -247,6 +259,12 @@ export default function SettingsPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="backups" className="mt-4">
+          <PermissionGate permission="Settings.Manage">
+            <BackupSettingsTab firmId={firmId} firmName={name || firm?.name} />
+          </PermissionGate>
         </TabsContent>
 
         <TabsContent value="preferences" className="mt-4">

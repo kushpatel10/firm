@@ -10,10 +10,11 @@ import { getGoogleOAuthURL, getGoogleRedirectURI, isDevAuthBypass } from "@/lib/
 export const authService = {
   /**
    * Get the Google OAuth consent URL
+   * @param {Object} [options]
    * @returns {string}
    */
-  getGoogleAuthUrl() {
-    return getGoogleOAuthURL();
+  getGoogleAuthUrl(options = {}) {
+    return getGoogleOAuthURL(options);
   },
 
 
