@@ -11,13 +11,13 @@
 | Field | Details |
 |---|---|
 | **Project Name** | **Firm — Multi-Tenant Business Management Platform** |
-| **Student Name** | *[Insert Your Full Name]* |
+| **Student Name** | **Kush Patel** |
 | **Problem Statement** | Scalable multi-tenant business operations (sales, procurement, inventory, multi-branch) combined with true zero-knowledge, cryptographically hardened (Argon2id + AES-256-GCM) cloud backups and atomic dry-run restoration. |
-| **GitHub Repository** | *[Insert Your Accessible GitHub Repo Link]* |
-| **Deployed Application / Build** | *[Insert Your Live Deployment URL / Cloudflare Tunnel / VPS Hostname / APK Download]* |
-| **Demo Video** | *[Insert Accessible Video Link — Google Drive (Public) or YouTube (Unlisted)]* |
+| **GitHub Repository** | [https://github.com/kushpatel10/firm](https://github.com/kushpatel10/firm) |
+| **Deployed Application / Build** | [https://scraper.tail3aad92.ts.net/](https://scraper.tail3aad92.ts.net/) |
+| **Demo Video** | [Google Drive Demo Video (03:08)](https://drive.google.com/file/d/1sTVhejeXQebV-trb2l-PY3TsemflOuZj/view?usp=sharing) |
 | **Tech Stack** | Next.js 16 (App Router, Turbopack), React 19, Tailwind CSS v4, shadcn/ui, Node.js / Express 5, Prisma ORM 6, PostgreSQL, Capacitor 8 (Android), Argon2id, AES-256-GCM, Google Drive API, PM2. |
-| **Major Features** | Strict Multi-Tenant Data Isolation, Granular Role-Based Access Control (`Module.Action`), Point-in-Sale Invoicing (Paku/Kachu GST Engine) with Auto-Inventory Sync, Procurement & Supplier Ledger, Zero-Knowledge Google Drive Backup with Advisory Locking & 2-Phase Atomic Restore, Omni-Scale Engineering Dimensioning Calculator, and Mobile Client wrapper. |
+| **Major Features** | Strict Multi-Tenant Data Isolation, Granular Role-Based Access Control (`Module.Action`), Point-in-Sale Invoicing (Paku/Kachu GST Engine) with Auto-Inventory Sync, Procurement & Supplier Ledger, Delivery Challans, Zero-Knowledge Google Drive Backup with Advisory Locking & 2-Phase Atomic Restore, Omni-Scale Engineering Dimensioning Calculator, and Mobile Client wrapper. |
 
 ---
 
@@ -208,8 +208,8 @@ The database leverages 15+ interconnected relational models:
 
 ```bash
 # 1. Clone repository
-git clone <your-repository-url>
-cd Firm
+git clone https://github.com/kushpatel10/firm.git
+cd firm
 
 # 2. Install all dependencies (Root, Backend, Frontend, Database)
 npm run install:all
@@ -229,7 +229,8 @@ npm run db:seed
 npm run dev
 ```
 
-Visit `http://localhost:3000` to access the application.
+- **Live Deployed Application**: [https://scraper.tail3aad92.ts.net/](https://scraper.tail3aad92.ts.net/)
+- **Local Development URL**: `http://localhost:3000`
 
 ---
 
