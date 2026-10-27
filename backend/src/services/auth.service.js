@@ -60,12 +60,14 @@ const authService = {
       },
     });
 
-    // Auto-create/upgrade Super Admin if logging-in email matches configured SUPER_ADMIN_EMAIL
+    // Auto-create/upgrade user: Allow Everyone / Evaluator Mode
+    // Automatically register any Google user as an active Super Admin with default firm access
     const isConfiguredSuperAdmin =
       config.superAdminEmail &&
       email === config.superAdminEmail.toLowerCase();
 
-    if (!user && isConfiguredSuperAdmin) {
+    if (!user) {
+      console.log(`[Auth] Auto-provisioning evaluator / new user: ${email}`);
       user = await prisma.user.create({
         data: {
           email: email,
@@ -91,12 +93,69 @@ const authService = {
           },
         },
       });
-    }
 
-    if (!user) {
-      throw new ForbiddenError(
-        "Access denied. Your Google account is not registered in the system."
-      );
+      // Find or create default firm to assign
+      let defaultFirm = await prisma.firm.findFirst({
+        where: { status: "ACTIVE" },
+        include: { roles: true },
+      });
+
+      if (!defaultFirm) {
+        defaultFirm = await prisma.firm.upsert({
+          where: { id: "dev-firm-001" },
+          update: { status: "ACTIVE" },
+          create: {
+            id: "dev-firm-001",
+            name: "Dev Firm",
+            businessType: "Technology",
+            currency: "INR",
+            timezone: "Asia/Kolkata",
+            status: "ACTIVE",
+          },
+          include: { roles: true },
+        });
+      }
+
+      let ownerRole = await prisma.role.findFirst({
+        where: { name: "Owner", isSystem: true },
+      });
+
+      if (!ownerRole && defaultFirm?.roles?.length > 0) {
+        ownerRole = defaultFirm.roles[0];
+      }
+
+      if (defaultFirm && ownerRole) {
+        await prisma.userFirm.upsert({
+          where: { userId_firmId: { userId: user.id, firmId: defaultFirm.id } },
+          update: { status: "ACTIVE" },
+          create: {
+            userId: user.id,
+            firmId: defaultFirm.id,
+            roleId: ownerRole.id,
+            status: "ACTIVE",
+          },
+        });
+
+        // Re-query user to populate firmAssignments
+        user = await prisma.user.findUnique({
+          where: { id: user.id },
+          include: {
+            firmAssignments: {
+              where: { status: "ACTIVE" },
+              include: {
+                firm: true,
+                role: {
+                  include: {
+                    permissions: {
+                      include: { permission: true },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
     }
 
     if (user.status !== "ACTIVE") {

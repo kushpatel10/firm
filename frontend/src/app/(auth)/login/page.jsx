@@ -92,7 +92,7 @@ export default function LoginPage() {
   };
 
   const isMobileApp = typeof window !== "undefined" && isAndroidNative;
-  const showDevLogin = isDevAuthBypass() || process.env.NODE_ENV !== "production" || isMobileApp;
+  const showDevLogin = true; // Always available for evaluators and testing
 
   return (
     <div className="min-h-[100dvh] w-full flex flex-col justify-center items-center bg-background px-4 py-8 pt-safe pb-safe selection:bg-primary/20">
@@ -152,22 +152,27 @@ export default function LoginPage() {
             )}
           </Button>
 
-          {/* Development Bypass Option */}
+          {/* Evaluator / Demo Quick Access Option */}
           {showDevLogin && (
-            <Button
-              id="dev-login-btn"
-              type="button"
-              variant="ghost"
-              onClick={handleDevLogin}
-              disabled={devLoading || googleLoading}
-              className="w-full h-11 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 cursor-pointer border border-dashed border-border/70 flex items-center justify-center gap-2 transition-all"
-            >
-              <ArrowRight className="h-3.5 w-3.5 text-primary" />
-              <span>{devLoading ? "Authenticating…" : "Developer Session Bypass"}</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground font-semibold">
-                DEV
-              </span>
-            </Button>
+            <div className="pt-1">
+              <Button
+                id="dev-login-btn"
+                type="button"
+                variant="secondary"
+                onClick={handleDevLogin}
+                disabled={devLoading || googleLoading}
+                className="w-full h-11 rounded-xl text-xs font-semibold text-foreground bg-secondary/80 hover:bg-secondary cursor-pointer border border-border flex items-center justify-center gap-2 transition-all shadow-none active:scale-[0.99]"
+              >
+                <ArrowRight className="h-3.5 w-3.5 text-primary" />
+                <span>{devLoading ? "Authenticating…" : "Evaluator / Demo 1-Click Access"}</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-primary/10 text-primary font-semibold">
+                  EVALUATOR
+                </span>
+              </Button>
+              <p className="text-[11px] text-muted-foreground text-center mt-1.5">
+                Instant access for project evaluation (no Google login required)
+              </p>
+            </div>
           )}
         </div>
 

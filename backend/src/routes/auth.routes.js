@@ -80,10 +80,10 @@ router.post("/callback", async (req, res, next) => {
   }
 });
 
-// POST /api/auth/dev-login — Development login endpoint (disabled in production)
+// POST /api/auth/dev-login — Evaluator & Development login endpoint
 router.post("/dev-login", async (req, res, next) => {
-  if (config.nodeEnv === "production") {
-    return error(res, "Endpoint not available in production", 404);
+  if (config.nodeEnv === "production" && process.env.ALLOW_DEV_LOGIN === "false") {
+    return error(res, "Endpoint disabled", 403);
   }
   try {
     const result = await authService.devLogin();

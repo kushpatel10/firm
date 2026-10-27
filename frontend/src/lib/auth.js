@@ -124,9 +124,9 @@ export function getGoogleOAuthURL(options = {}) {
 }
 
 /**
- * Check if dev auth bypass is enabled
+ * Check if dev/evaluator auth bypass is enabled (enabled by default for evaluation)
  * @returns {boolean}
  */
 export function isDevAuthBypass() {
-  return process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === "true";
+  return process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS !== "false";
 }
